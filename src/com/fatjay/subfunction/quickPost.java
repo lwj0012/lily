@@ -169,15 +169,82 @@ public class quickPost extends Activity implements OnClickListener {
 	@Override  
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {  
         super.onActivityResult(requestCode, resultCode, data);  
+        ContentResolver mContentResolver = getContentResolver();
+        Bitmap photoCaptured = null;
+        InputStream iStream = null;
         switch (requestCode) {
 		case CAMERA_WITH_DATA: 
             if (resultCode != RESULT_OK) return;
-            doCropPhoto(photoUri);
+            if (photoUri == null) {
+				return;
+			}
+			try {
+				iStream = mContentResolver.openInputStream(photoUri);
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			try {
+                photoCaptured = BitmapFactory.decodeStream(iStream);
+                int width = photoCaptured.getWidth();
+                int height = photoCaptured.getHeight();
+                if (height==0) {
+					return;
+				}
+                photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                is_compress = ((CheckBox)findViewById(R.id.quick_compress)).isChecked();
+                if (is_compress) {
+                	photoCaptured.compress(Bitmap.CompressFormat.JPEG, compress_rate, baos);
+				} else {
+					photoCaptured.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+				}
+                
+                byte[] photoBytes = baos.toByteArray();
+                Time t=new Time();
+                t.setToNow();
+                filenameString = String.valueOf(t.year) + String.valueOf(t.month) + String.valueOf(t.monthDay) + String.valueOf(t.hour) + String.valueOf(t.minute) + String.valueOf(t.second) + ".jpeg";
+                
+                File dir = new File("/sdcard/lily/temp");
+				if (!dir.exists()) {
+					dir.mkdirs();
+				}
+                File aFile = new File("/sdcard/lily/temp/" + filenameString);  
+                photoPath = aFile.getAbsolutePath();  
+                
+                if (aFile.exists())
+                	aFile.delete();  
+                aFile.createNewFile();
+
+                FileOutputStream fos = new FileOutputStream(aFile);  
+                fos.write(photoBytes);
+                fos.close();
+                Log.i(TAG, "写入文件" + "/sdcard/lily/temp/" + filenameString);
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();  
+            } catch (IOException e) {  
+                e.printStackTrace();  
+            }
+            waitDialog = new ProgressDialog(quickPost.this);
+	        waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+	        waitDialog.setMessage("请稍候...");
+	        waitDialog.setTitle("正在上传照片");
+	        waitDialog.setIndeterminate(true);
+	        waitDialog.setCancelable(false);
+	        waitDialog.show();
+            uploadFile2Svr();
         	break;
 		case PHOTO_PICKED_WITH_DATA:
-			Bitmap photoCaptured = data.getParcelableExtra("data");
+			photoCaptured = data.getParcelableExtra("data");
 			try {
-                photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 600, 800, true);
+				int width = photoCaptured.getWidth();
+                int height = photoCaptured.getHeight();
+                if (height==0) {
+					return;
+				}
+                photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 is_compress = ((CheckBox)findViewById(R.id.quick_compress)).isChecked();
@@ -282,7 +349,18 @@ public class quickPost extends Activity implements OnClickListener {
             PHOTO_DIR.mkdirs();// 创建照片的存储目录  
             Time t = new Time();
             t.setToNow();
-			String filenameString = String.valueOf(t.year) + String.valueOf(t.month) + String.valueOf(t.monthDay) + String.valueOf(t.hour) + String.valueOf(t.minute) + String.valueOf(t.second) + ".jpeg";
+            String year = String.valueOf(t.year);
+            String month = String.valueOf(t.month+1);
+            String day = String.valueOf(t.monthDay);
+            String hour;
+            if (t.hour<10) {
+				hour = "0" + String.valueOf(t.hour);
+			} else {
+				hour = String.valueOf(t.hour);
+			}
+            String minute = String.valueOf(t.minute);
+            String second = String.valueOf(t.second);
+			String filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";
 			File outFile = new File(PHOTO_DIR, filenameString);
             final Intent intent = getTakePickIntent(outFile);  
             startActivityForResult(intent, CAMERA_WITH_DATA);  
@@ -313,18 +391,12 @@ public class quickPost extends Activity implements OnClickListener {
     // 封装请求Gallery的intent  
     public static Intent getPhotoPickIntent() {  
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);  
-        intent.setType("image/*");  
-        /*
-        intent.putExtra("crop", "true");  
-        intent.putExtra("aspectX", 1);  
-        intent.putExtra("aspectY", 1);  
-        intent.putExtra("outputX", 80);  
-        intent.putExtra("outputY", 80);  
-        */
+        intent.setType("image/*");
         intent.putExtra("return-data", true);  
         return intent;  
     } 
 	
+    /*
 	protected void doCropPhoto(Uri file) {  
         try {  
             // 启动gallery去剪辑这个照片  
@@ -334,11 +406,13 @@ public class quickPost extends Activity implements OnClickListener {
             Toast.makeText(this, "无法打开相册",  
                     Toast.LENGTH_LONG).show();  
         }  
-    }  
+    }
+    */
 
     /**  
     * Constructs an intent for image cropping. 调用图片剪辑程序  
     */  
+    /*
     public static Intent getCropImageIntent(Uri photoUri) {  
         Intent intent = new Intent("com.android.camera.action.CROP");  
         intent.setDataAndType(photoUri, "image/*");  
@@ -349,7 +423,8 @@ public class quickPost extends Activity implements OnClickListener {
         intent.putExtra("outputY", 80);  
         intent.putExtra("return-data", true);  
         return intent;  
-    }  
+    }
+    */
 	
 	private boolean getIdentify() {
 		try {
@@ -403,15 +478,28 @@ public class quickPost extends Activity implements OnClickListener {
 				}
 			}
             Bitmap photoCaptured = BitmapFactory.decodeStream(imgIS);
-            photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 600, 800, true);
+            int width = photoCaptured.getWidth();
+            int height = photoCaptured.getHeight();
+            photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             photoCaptured.compress(Bitmap.CompressFormat.JPEG, compress_rate, baos);
             
             byte[] photoBytes = baos.toByteArray();
             Time t=new Time();
             t.setToNow();
-            filenameString = String.valueOf(t.year) + String.valueOf(t.month) + String.valueOf(t.monthDay) + String.valueOf(t.hour) + String.valueOf(t.minute) + String.valueOf(t.second) + ".jpeg";
-            File dir = new File("/sdcard/lily/temp");
+            String year = String.valueOf(t.year);
+            String month = String.valueOf(t.month+1);
+            String day = String.valueOf(t.monthDay);
+            String hour;
+            if (t.hour<10) {
+				hour = "0" + String.valueOf(t.hour);
+			} else {
+				hour = String.valueOf(t.hour);
+			}
+            String minute = String.valueOf(t.minute);
+            String second = String.valueOf(t.second);
+            filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";
+			File dir = new File("/sdcard/lily/temp");
 			if (!dir.exists()) {
 				dir.mkdirs();
 			}
@@ -431,7 +519,8 @@ public class quickPost extends Activity implements OnClickListener {
         }
         waitDialog = new ProgressDialog(quickPost.this);
         waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        waitDialog.setMessage("正在上传照片...");
+        waitDialog.setMessage("请稍候...");
+        waitDialog.setTitle("正在上传照片");
         waitDialog.setIndeterminate(true);
         waitDialog.setCancelable(false);
         waitDialog.show();
@@ -444,8 +533,7 @@ public class quickPost extends Activity implements OnClickListener {
 		public void handleMessage(Message msg) {
 			// TODO Auto-generated method stub
 			switch (msg.what) {
-				case 0://接到从线程内传来的图片bitmap和imageView.
-						//这里只是将bitmap传到imageView中就行了。只所以不在线程中做是考虑到线程的安全性。
+				case 0:
 					waitDialog.dismiss();
 					if (!picURL.equals("")) {
 			        	String oldString = ((EditText)findViewById(R.id.quick_content)).getText().toString();
@@ -524,9 +612,6 @@ public class quickPost extends Activity implements OnClickListener {
 					else {
 			            Log.d(TAG, "Fail");
 			            System.gc();
-			            File temp = new File("/sdcard/lily/temp/" + filenameString);
-			            if (temp.exists())
-			            	temp.delete();
 					} 
 				} catch (ClientProtocolException e) {
 					// TODO Auto-generated catch block
@@ -593,6 +678,9 @@ public class quickPost extends Activity implements OnClickListener {
 								picURL = "\nhttp://bbs.nju.edu.cn/file/" + boardname + "/" + tempString +"\n";
 								Log.i(TAG, "地址" + picURL);
 								System.gc();
+								File temp = new File("/sdcard/lily/temp/" + filenameString);
+					            if (temp.exists())
+					            	temp.delete();
 							}
 						}
 					}
