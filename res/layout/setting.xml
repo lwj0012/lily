@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+	
+    <TextView
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content" 
+	    android:layout_marginLeft="20dip"
+	    android:layout_marginRight="20dip"
+	    android:text="账号： "
+	    android:gravity="left"
+	    android:textAppearance="?android:attr/textAppearanceMedium">
+    </TextView>
+    
+	<EditText 
+		android:id="@+id/username"
+		android:layout_height="wrap_content" 
+		android:layout_width="fill_parent" 
+		android:layout_marginLeft="20dip"
+    	android:layout_marginRight="20dip"
+    	android:autoText="false"
+    	android:capitalize="none"
+    	android:gravity="fill_horizontal"
+		android:textAppearance="?android:attr/textAppearanceMedium">
+	</EditText>
+
+	<TextView
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:layout_marginLeft="20dip"
+    android:layout_marginRight="20dip"
+    android:text="密码："
+    android:gravity="left"
+    android:textAppearance="?android:attr/textAppearanceMedium">
+    </TextView>
+    	
+    <EditText 
+		android:id="@+id/password"
+		android:layout_height="wrap_content" 
+		android:layout_width="fill_parent" 
+		android:layout_marginLeft="20dip"
+    	android:layout_marginRight="20dip"
+    	android:autoText="false"
+    	android:capitalize="none"
+    	android:gravity="fill_horizontal"
+    	android:password="true"
+		android:textAppearance="?android:attr/textAppearanceMedium">
+	</EditText>
+	<RelativeLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="45dp" >
+	    <Button 
+	        android:id="@+id/setting_test"
+	        android:layout_height="fill_parent" 
+			android:layout_width="100dp" 
+	    	android:text="@string/identify"
+	    	android:gravity="fill_horizontal"
+	    	android:layout_marginLeft="20dip"
+	    	android:layout_alignParentTop="true"
+	    	android:layout_alignParentLeft="true" />
+
+	   	<CheckBox
+	   	    android:id="@+id/setting_remember"
+	   	    android:layout_width="140dp"
+	   	    android:checked="true"
+	   	    android:layout_height="fill_parent"
+	   	    android:layout_alignParentRight="true"
+	   	    android:layout_alignParentTop="true"
+	   	    android:text="@string/rememberaccount" />
+ 
+	</RelativeLayout>
+	<TextView 
+	    android:text="@string/photo_compress_rate"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:singleLine="false" />
+	<Spinner
+	    android:id="@+id/setting_photo"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content" />
+
+</LinearLayout>

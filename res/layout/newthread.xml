@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    >
+    <LinearLayout 
+        android:orientation="vertical"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+    	android:layout_weight="5">
+		<TextView
+		    android:layout_width="fill_parent" 
+		    android:layout_height="wrap_content" 
+		    android:layout_marginLeft="20dip"
+		    android:layout_marginRight="20dip"
+		    android:text="标题:"
+		    android:gravity="left"
+		    android:textAppearance="?android:attr/textAppearanceMedium">
+	    </TextView>
+	    
+		<EditText
+		    android:id="@+id/new_title"
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:layout_marginLeft="20dip"
+		    android:layout_marginRight="20dip"
+		    android:autoText="false"
+		    android:capitalize="none"
+		    android:gravity="fill_horizontal"
+		    android:textAppearance="?android:attr/textAppearanceMedium" >
+	
+		</EditText>
+	
+		<TextView
+		    android:layout_width="fill_parent" 
+		    android:layout_height="wrap_content" 
+		    android:layout_marginLeft="20dip"
+		    android:layout_marginRight="20dip"
+		    android:text="内容:"
+		    android:gravity="left"
+		    android:textAppearance="?android:attr/textAppearanceMedium">
+	    </TextView>
+	    	
+	    <EditText
+	        android:id="@+id/new_content"
+	        android:layout_width="fill_parent"
+	        android:layout_height="250dp"
+	        android:layout_marginLeft="20dip"
+	        android:layout_marginRight="20dip"
+	        android:autoText="false"
+	        android:capitalize="none"
+	        android:gravity="fill_horizontal"
+	        android:singleLine="false"
+	        android:textAppearance="?android:attr/textAppearanceMedium" >
+		</EditText>
+	</LinearLayout>
+	<LinearLayout 
+	    android:orientation="horizontal"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_weight="2">
+
+		<Button
+		    android:id="@+id/new_photo"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_gravity="center"
+		    android:gravity="center"
+		    android:layout_weight="1"
+		    android:text="上传图片" />
+		<CheckBox 
+		    android:id="@+id/new_compress"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="压缩图片？"
+		    android:checked="true"
+		    android:layout_weight="1" />
+	</LinearLayout>
+	<LinearLayout 
+	    android:orientation="horizontal"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    >
+
+	    <Button
+	        android:id="@+id/new_send"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:layout_gravity="bottom"
+	        android:layout_weight="1"
+	        android:text="提交" />
+
+	    <Button 
+	    android:id="@+id/new_cancel"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:text="取消"
+	    android:layout_weight="1"/>
+	</LinearLayout>
+</LinearLayout>

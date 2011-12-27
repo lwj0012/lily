@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TabHost xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/tabhost"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+
+        <TabWidget
+            android:id="@android:id/tabs"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="1dip"
+            android:paddingRight="1dip"
+            android:paddingTop="4dip"
+            android:visibility="gone" />
+
+        <FrameLayout
+            android:id="@android:id/tabcontent"
+            android:layout_width="fill_parent"
+            android:layout_height="0dip"
+            android:layout_weight="1.11" />
+        <RadioGroup
+            android:id="@+id/rg"
+            android:layout_width="fill_parent"
+            android:layout_height="45dp"
+            android:background="#f00"
+            android:orientation="horizontal" >
+			<RadioButton
+			        android:id="@+id/rb01"
+			        android:layout_width="wrap_content"
+			        style="@style/menu_item"
+			    	android:layout_height="45dp"
+			    	android:gravity="center_horizontal"
+			    	android:checked="true"
+			        android:text="全站\n十大" />
+            <RadioButton
+			        android:id="@+id/rb02"
+			        android:layout_width="wrap_content"
+			        style="@style/menu_item"
+			    	android:layout_height="45dp"
+			    	android:gravity="center_horizontal"
+			        android:text="我的\n收藏" />
+            <RadioButton
+			        android:id="@+id/rb03"
+			        android:layout_width="wrap_content"
+			        style="@style/menu_item"
+			    	android:layout_height="45dp"
+			    	android:gravity="center_horizontal"
+			        android:text="各区\n热点" />
+            <RadioButton
+			        android:id="@+id/rb04"
+			        android:layout_width="wrap_content"
+			        style="@style/menu_item"
+			    	android:layout_height="45dp"
+			    	android:gravity="center_horizontal"
+			        android:text="版面\n浏览" />
+            <RadioButton
+			        android:id="@+id/rb05"
+			        android:layout_width="wrap_content"
+			        style="@style/menu_item"
+			    	android:layout_height="45dp"
+			    	android:gravity="center_horizontal"
+			        android:text="账号\n设置" />
+        </RadioGroup>
+    </LinearLayout>
+
+</TabHost>

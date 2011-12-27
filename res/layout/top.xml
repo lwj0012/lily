@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#D2B48C" >
+    <RelativeLayout 
+		    android:layout_width="match_parent"
+		    android:layout_height="30dp"
+		    android:orientation="horizontal"
+		    android:background="#545454" >
+	
+		    <TextView
+		        android:text="@string/top10"
+		        android:layout_width="wrap_content"
+		        android:layout_height="fill_parent"
+		        android:textSize="26dp"
+		        android:layout_alignParentTop="true" />
+		    <Button
+		        android:id="@+id/top10_refresh"
+		        style="@+style/menu_item"
+		        android:layout_width="30dp"
+		        android:layout_height="fill_parent"
+		        android:layout_alignParentRight="true"
+		        android:layout_alignParentTop="true"
+		        android:drawableTop="@drawable/ic_menu_refresh" />
+		 </RelativeLayout>
+    <FrameLayout
+		android:layout_width="fill_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1">
+		<ListView
+		    android:id="@android:id/list"
+		    android:layout_width="fill_parent"
+		    android:layout_height="fill_parent"
+		    android:background="@drawable/back"
+			android:cacheColorHint="#00000000" >
+		</ListView>
+	</FrameLayout>    
+</LinearLayout>

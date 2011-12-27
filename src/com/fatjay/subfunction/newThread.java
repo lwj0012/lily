@@ -1,0 +1,596 @@
+package com.fatjay.subfunction;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.util.EntityUtils;
+import org.apache.http.NameValuePair;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
+
+import com.fatjay.R;
+import com.fatjay.main.userinfo;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.provider.MediaStore;
+import android.text.format.Time;
+import android.util.Log;
+import android.view.ContextThemeWrapper;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.ListAdapter;
+import android.widget.Toast;
+
+public class newThread extends Activity implements OnClickListener {
+	userinfo mUserinfo = null;
+	String pidString = "0", reidString = "0", urlString, boardname;
+	boolean is_compress = false;
+	String photoPath;
+	String filenameString;
+	static Uri photoUri;
+	String picURL;
+	String author;
+	String TAG = "New thread";
+	boolean quote = true;
+	private int compress_rate;
+	private ProgressDialog waitDialog;
+	private static final int CAMERA_WITH_DATA = 3023;  
+    private static final int PHOTO_PICKED_WITH_DATA = 3021;
+    private static final File PHOTO_DIR = new File(Environment.getExternalStorageDirectory() + "/lily/temp");
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.newthread);
+		mUserinfo = (userinfo)getApplication(); 
+		Bundle mBundle = getIntent().getExtras();
+		String action = mBundle.getString("action");							//specisc the action, reply or new
+		String titleString = mBundle.getString("title");
+		author = mBundle.getString("author");
+		urlString = mBundle.getString("url");
+		SharedPreferences favor = this.getSharedPreferences("compress_rate", 0);
+        String temp = favor.getString("rate", null);
+        compress_rate = Integer.valueOf(temp);
+		
+		boardname = urlString.substring(urlString.indexOf("=")+1);
+		if (boardname.contains("&")) {
+			boardname = boardname.substring(0, boardname.indexOf("&"));
+		}
+		if (action.equals("reply")) {
+			String title = null;
+			quote = true;
+			title = "Re: " + titleString;
+			title = title.replace("○ ", "");
+			((EditText)findViewById(R.id.new_title)).setText(title);
+			((EditText)findViewById(R.id.new_title)).setEnabled(false);
+			//((EditText)findViewById(R.id.new_content)).setText("\n\n " + quote);
+			reidString = urlString.substring(urlString.indexOf("M.") + 2);
+			reidString = reidString.substring(0, reidString.indexOf(".A"));
+			String pid = mBundle.getString("pid");
+			int count = 3;
+			if (pid.equals("-2")) {
+				while (count > 0) {
+					if (!getPreINFO()) {
+						getIdentify();
+					} else {
+						break;
+					}
+				}
+			} else {
+				pidString = pid;
+			}
+		}
+		Button mButton1 = (Button)findViewById(R.id.new_send);
+		mButton1.setOnClickListener(this);
+		Button mButton2 = (Button)findViewById(R.id.new_cancel);
+		mButton2.setOnClickListener(this);
+		Button photoButton = (Button)findViewById(R.id.new_photo);
+		photoButton.setOnClickListener(this);
+	}
+
+	public void onClick(View arg0) {
+		// TODO Auto-generated method stub
+		Intent restartFavor = new Intent(); 
+		restartFavor.setClass(newThread.this, threadContent.class);
+		switch (arg0.getId()) {
+		case R.id.new_send:
+			if (send()) {
+				setResult(RESULT_OK, restartFavor);
+				this.finish();
+			}
+			break;
+		case R.id.new_cancel:
+			setResult(RESULT_CANCELED, restartFavor);
+			this.finish();
+			break;
+		case R.id.new_photo:
+			doPickPhotoAction();
+			break;
+		}
+	}
+
+	@Override  
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {  
+        super.onActivityResult(requestCode, resultCode, data);  
+        switch (requestCode) {
+		case CAMERA_WITH_DATA: 
+            if (resultCode != RESULT_OK) return;
+            doCropPhoto(photoUri);
+        	break;
+		case PHOTO_PICKED_WITH_DATA:
+			Bitmap photoCaptured = data.getParcelableExtra("data");
+			try {
+                photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 600, 800, true);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
+                if (is_compress) {
+                	photoCaptured.compress(Bitmap.CompressFormat.JPEG, compress_rate, baos);
+				} else {
+					photoCaptured.compress(Bitmap.CompressFormat.JPEG, 70, baos);
+				}
+                
+                byte[] photoBytes = baos.toByteArray();
+                Time t=new Time();
+                t.setToNow();
+                filenameString = String.valueOf(t.year) + String.valueOf(t.month) + String.valueOf(t.monthDay) + String.valueOf(t.hour) + String.valueOf(t.minute) + String.valueOf(t.second) + ".jpeg";
+                
+                File dir = new File("/sdcard/lily/temp");
+				if (!dir.exists()) {
+					dir.mkdirs();
+				}
+                File aFile = new File("/sdcard/lily/temp/" + filenameString);  
+                photoPath = aFile.getAbsolutePath();  
+                
+                if (aFile.exists())
+                	aFile.delete();  
+                aFile.createNewFile();
+
+                FileOutputStream fos = new FileOutputStream(aFile);  
+                fos.write(photoBytes);
+                fos.close();
+                Log.i(TAG, "写入文件" + "/sdcard/lily/temp/" + filenameString);
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();  
+            } catch (IOException e) {  
+                e.printStackTrace();  
+            }
+            waitDialog = new ProgressDialog(newThread.this);
+	        waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+	        waitDialog.setMessage("正在上传照片...");
+	        waitDialog.setIndeterminate(true);
+	        waitDialog.setCancelable(false);
+	        waitDialog.show();
+            uploadFile2Svr();
+        	break;
+		default:
+			break;
+		}
+    }   
+
+	private void doPickPhotoAction() {  
+        Context context = newThread.this;  
+      
+        // Wrap our context to inflate list items using correct theme  
+        final Context dialogContext = new ContextThemeWrapper(context,  
+                android.R.style.Theme_Light);  
+        String cancel="返回";  
+        String[] choices;  
+        choices = new String[2];  
+        choices[0] = "创建新图片";  //拍照  
+        choices[1] = "从相册选择图片";  //从相册中选择  
+        final ListAdapter adapter = new ArrayAdapter<String>(dialogContext,  
+                android.R.layout.simple_list_item_1, choices);  
+      
+        final AlertDialog.Builder builder = new AlertDialog.Builder(  
+                dialogContext);  
+        builder.setTitle("图片选择");  
+        builder.setSingleChoiceItems(adapter, -1,  
+                new DialogInterface.OnClickListener() {  
+                    public void onClick(DialogInterface dialog, int which) {  
+                        dialog.dismiss();  
+                        switch (which) {  
+                        case 0:{  
+                            String status=Environment.getExternalStorageState();  
+                            if(status.equals(Environment.MEDIA_MOUNTED)){//判断是否有SD卡  
+                            	doTakePhoto();// 用户点击了从照相机获取  
+                            }  
+                            else{  
+                                Toast.makeText(newThread.this, "没有SD卡", Toast.LENGTH_LONG);
+                            }  
+                            break;  
+                              
+                        }  
+                        case 1:  
+                            doPickPhotoFromGallery();// 从相册中去获取  
+                            break;  
+                        }  
+                    }  
+                });  
+        builder.setNegativeButton(cancel, new DialogInterface.OnClickListener() {  
+      
+            @Override  
+            public void onClick(DialogInterface dialog, int which) {  
+                dialog.dismiss();  
+            }  
+              
+        });  
+        builder.create().show();  
+    }
+	
+	protected void doTakePhoto() {  
+        try {  
+            // Launch camera to take photo for selected contact  
+            PHOTO_DIR.mkdirs();// 创建照片的存储目录  
+            Time t = new Time();
+            t.setToNow();
+			String filenameString = String.valueOf(t.year) + String.valueOf(t.month) + String.valueOf(t.monthDay) + String.valueOf(t.hour) + String.valueOf(t.minute) + String.valueOf(t.second) + ".jpeg";
+			File outFile = new File(PHOTO_DIR, filenameString);
+            final Intent intent = getTakePickIntent(outFile);  
+            startActivityForResult(intent, CAMERA_WITH_DATA);  
+        } catch (ActivityNotFoundException e) {  
+            Toast.makeText(this, "无法创建图片",  
+                    Toast.LENGTH_LONG).show();  
+        }  
+    }  
+      
+    public static Intent getTakePickIntent(File f) {  
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE, null);  
+        photoUri = Uri.fromFile(f);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);  
+        return intent;  
+    }
+	
+	protected void doPickPhotoFromGallery() {  
+        try {  
+            // Launch picker to choose photo for selected contact  
+            final Intent intent = getPhotoPickIntent();  
+            startActivityForResult(intent, PHOTO_PICKED_WITH_DATA);  
+        } catch (ActivityNotFoundException e) {  
+            Toast.makeText(this, "无法打开相册",  
+                    Toast.LENGTH_LONG).show();  
+        }  
+    }  
+      
+    // 封装请求Gallery的intent  
+    public static Intent getPhotoPickIntent() {  
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);  
+        intent.setType("image/*");  
+        intent.putExtra("crop", "true");  
+        intent.putExtra("aspectX", 1);  
+        intent.putExtra("aspectY", 1);  
+        intent.putExtra("outputX", 80);  
+        intent.putExtra("outputY", 80);  
+        intent.putExtra("return-data", true);  
+        return intent;  
+    } 
+	
+	protected void doCropPhoto(Uri file) {  
+        try {  
+            // 启动gallery去剪辑这个照片  
+            final Intent intent = getCropImageIntent(file);  
+            startActivityForResult(intent, PHOTO_PICKED_WITH_DATA);  
+        } catch (Exception e) {  
+            Toast.makeText(this, "无法打开相册",  
+                    Toast.LENGTH_LONG).show();  
+        }  
+    }  
+
+    /**  
+    * Constructs an intent for image cropping. 调用图片剪辑程序  
+    */  
+    public static Intent getCropImageIntent(Uri photoUri) {  
+        Intent intent = new Intent("com.android.camera.action.CROP");  
+        intent.setDataAndType(photoUri, "image/*");  
+        intent.putExtra("crop", "true");  
+        intent.putExtra("aspectX", 1);  
+        intent.putExtra("aspectY", 1);  
+        intent.putExtra("outputX", 80);  
+        intent.putExtra("outputY", 80);  
+        intent.putExtra("return-data", true);  
+        return intent;  
+    }  
+	
+	private boolean getIdentify() {
+		try {
+			Random random = new Random();
+			int s = random.nextInt(99999)%(90000) + 10000;
+			String username = mUserinfo.getUsername();
+			String pwd = mUserinfo.getPwd();
+			if (username == "") {
+				Toast.makeText(this, "请先设置帐号信息", Toast.LENGTH_LONG).show();
+				finish();
+			}
+			String urlString = "http://bbs.nju.edu.cn/vd" + String.valueOf(s) + "/bbslogin?type=2&id=" + username + "&pw=" + pwd;
+			String doc = Jsoup.connect(urlString).get().toString();
+			int t = doc.indexOf("setCookie");
+			if (t == -1) {
+				return false;
+			}
+			else {
+				String tempString = doc.substring(t);
+				tempString = tempString.substring(11, tempString.indexOf(")")-1);
+				String[] tm =  tempString.split("\\+");
+				String _U_KEY = String.valueOf(Integer.parseInt(tm[1])-2);
+				String[] tm2 = tm[0].split("N");
+				String _U_UID = tm2[1];
+				String _U_NUM = "" + String.valueOf(Integer.parseInt(tm2[0]) + 2);
+				mUserinfo.setCookies("_U_KEY=" + _U_KEY + "; " + "_U_UID=" + _U_UID + "; " + "_U_NUM=" + _U_NUM + ";");
+				mUserinfo.setUsername(username);
+				mUserinfo.setPwd(pwd);
+				mUserinfo.setCode("vd" + String.valueOf(s));
+				return true;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public boolean getPreINFO() {
+		Bundle mBundle = getIntent().getExtras();
+		urlString = mBundle.getString("url");							//reply or new thread link, get the pid and reid
+		String action = mBundle.getString("action");							//specisc the action, reply or new
+		String code = mUserinfo.getCode();
+		String cookie = mUserinfo.getCookies();
+		URL mUrl;
+		HttpURLConnection conn;
+		try {
+			if (urlString.contains("/vd")) {
+				String[] url = urlString.split("cn/");
+				urlString = "http://bbs.nju.edu.cn/" + code+ "/" + url[1];
+			} else {
+				String[] url = urlString.split("cn/");
+				urlString = "http://bbs.nju.edu.cn/" + code + "/" + url[1];
+			}
+			boardname = urlString.substring(urlString.indexOf("=")+1);
+			if (boardname.contains("&")) {
+				boardname = boardname.substring(0, boardname.indexOf("&"));
+			}
+			StringBuffer sb;
+			if (action.equals("reply")) {
+				mUrl = new URL(urlString);
+				conn = (HttpURLConnection) mUrl.openConnection();
+				if(cookie!=null && cookie.length()>0){
+	                conn.setRequestProperty("Cookie", cookie);
+	            }
+				conn.setRequestMethod("GET");
+				conn.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
+				conn.connect();
+				InputStream in = conn.getInputStream(); 
+	            BufferedReader reader1 = new BufferedReader(new InputStreamReader(in,"gb2312")); 
+	            String inputLine = null;
+	            sb = new StringBuffer();  
+	            while ((inputLine = reader1.readLine()) != null) {  
+	                sb.append(inputLine).append("\n");
+	                if (inputLine.contains("错误")) {
+						Toast.makeText(newThread.this, inputLine, Toast.LENGTH_SHORT).show();
+						newThread.this.finish();
+						return true;
+					}
+	            }
+	            reader1.close();
+	            in.close();
+	            Document doc = Jsoup.parse(sb.toString());
+	            pidString = doc.select("input[name=pid]").attr("value");
+	            if (Integer.valueOf(pidString)<1 && Integer.valueOf(reidString)<1) {
+					return false;
+				} else {
+					return true;
+				}
+			} else {
+				pidString = "0";
+				reidString = "0";
+				return true;
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean sendThread() {
+		String code = mUserinfo.getCode();
+		String cookie = mUserinfo.getCookies();
+		String contentString = ((EditText)findViewById(R.id.new_content)).getText().toString();
+		String title = ((EditText)findViewById(R.id.new_title)).getText().toString();
+		String newurlString;
+		if (quote) {
+			contentString = contentString + "\n\n  【 在 " + author + " 的大作中提到: 】";
+		}
+		try {
+			newurlString = "http://bbs.nju.edu.cn/" + code + "/bbssnd?board=" + boardname;
+
+			HttpPost httpRequest = new HttpPost(newurlString);
+		    ArrayList<NameValuePair> postData = new ArrayList<NameValuePair>();
+		    postData.add(new BasicNameValuePair("title", title));
+		    postData.add(new BasicNameValuePair("pid", pidString));
+		    postData.add(new BasicNameValuePair("reid", reidString));
+		    postData.add(new BasicNameValuePair("signature", "1"));
+		    postData.add(new BasicNameValuePair("autocr", "on"));
+		    postData.add(new BasicNameValuePair("text", contentString));
+		    httpRequest.addHeader("Cookie", cookie);
+		    httpRequest.setEntity(new UrlEncodedFormEntity(postData, "GB2312"));
+		    HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
+			if (httpResponse.getStatusLine().getStatusCode() == 200) {
+				Toast.makeText(getApplicationContext(), "发送成功！",
+					     Toast.LENGTH_SHORT).show();
+				return true;
+			} else {
+				Toast.makeText(getApplicationContext(), "发送失败！",
+					     Toast.LENGTH_SHORT).show();
+				return false;
+			}
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean send() {
+		boolean success = sendThread();
+		int trycount = 3;
+		while (!success && trycount > 0) {
+			getIdentify();
+			success = sendThread();
+			trycount --;
+		}
+		if (!success) {
+			Toast.makeText(this, "你的网络似乎有点问题...", Toast.LENGTH_SHORT);
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	private Handler handler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			// TODO Auto-generated method stub
+			switch (msg.what) {
+				case 0://接到从线程内传来的图片bitmap和imageView.
+						//这里只是将bitmap传到imageView中就行了。只所以不在线程中做是考虑到线程的安全性。
+					waitDialog.dismiss();
+					if (!picURL.equals("")) {
+			        	String oldString = ((EditText)findViewById(R.id.new_content)).getText().toString();
+			            ((EditText)findViewById(R.id.new_content)).setText(oldString + picURL);
+			            Toast.makeText(newThread.this, "图片上传成功！", Toast.LENGTH_SHORT);
+					} else {
+						Toast.makeText(newThread.this, "图片上传失败！", Toast.LENGTH_SHORT);
+					}
+					break;
+				default:
+					super.handleMessage(msg);
+			}
+		}
+	};
+	
+	private ExecutorService executorService = Executors.newFixedThreadPool(5);
+	
+	public void uploadFile2Svr() {
+		executorService.submit(new Runnable() {
+			public void run() {
+	    		Message msg = new Message();
+	    		msg.what = 0;
+	    		picURL = "";
+		        HttpClient client = new DefaultHttpClient();
+				client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
+				String url = "http://bbs.nju.edu.cn/" + mUserinfo.getCode() + "/bbsdoupload";
+				
+				HttpPost imgPost = new HttpPost(url);
+				MultipartEntity reqEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+				File file = new File(photoPath);
+				try {
+					reqEntity.addPart("up", new FileBody(file));
+					reqEntity.addPart("exp", new StringBody("", Charset.forName("GB2312")));
+					reqEntity.addPart("ptext", new StringBody("", Charset.forName("GB2312")));
+					reqEntity.addPart("board", new StringBody(boardname, Charset.forName("GB2312")));
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				imgPost.setEntity(reqEntity);
+				imgPost.addHeader("Cookie", mUserinfo.getCookies());
+				imgPost.addHeader(reqEntity.getContentType());
+				
+				for (int i = 0; i < imgPost.getAllHeaders().length; i++) {
+					Log.d(TAG, imgPost.getAllHeaders()[i].toString());
+				}
+				Log.d(TAG, "executing request " + imgPost.getRequestLine());
+		
+				String result;
+			    HttpResponse httpResponse;
+				try {
+					Log.d(TAG, "before excuting...");
+					httpResponse = client.execute(imgPost);
+					Log.d(TAG, "after excuting...");
+					if (httpResponse.getStatusLine().getStatusCode() == 200) {
+			            result = EntityUtils.toString(httpResponse.getEntity());
+			            result = result.substring(result.indexOf("url=")+2, result.indexOf(">")-1);
+			            String fileNum = result.substring(result.indexOf("file=")+5, result.indexOf("&name"));
+			            url = "http://bbs.nju.edu.cn/" + mUserinfo.getCode() + "/bbsupload2?board=" + boardname + "&file=" + fileNum + "&name=" + filenameString + "&exp=&ptext=";
+			            Log.i(TAG, url);
+			            HttpGet uploadGet = new HttpGet(url);
+			            uploadGet.addHeader("Cookie", mUserinfo.getCookies());
+			            httpResponse = client.execute(uploadGet);
+			            if (httpResponse.getStatusLine().getStatusCode() == 200) {
+							result = EntityUtils.toString(httpResponse.getEntity());
+							if (result.contains("name=")) {
+								String tempString = result.substring(result.indexOf("name=")+5, result.length()-3);
+								picURL = "\nhttp://bbs.nju.edu.cn/file/" + boardname + "/" + tempString +"\n";
+								Log.i(TAG, "地址" + picURL);
+								System.gc();
+							}
+						}
+					}
+					else {
+			            Log.d(TAG, "Fail");
+			            System.gc();
+					} 
+				} catch (ClientProtocolException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				handler.sendMessage(msg);
+			}
+		});
+	}
+}
+
