@@ -152,17 +152,6 @@ public class quickPost extends Activity implements OnClickListener {
 				}
 				if (isIn) {
 					doPickPhotoAction();
-					/*
-					Time t = new Time();
-		            t.setToNow();
-					String pathString = Environment.getExternalStorageDirectory().toString() + "/lily/temp";
-					String filenameString = String.valueOf(t.year) + String.valueOf(t.month) + String.valueOf(t.monthDay) + String.valueOf(t.hour) + String.valueOf(t.minute) + String.valueOf(t.second) + ".jpeg";
-					File outFile = new File(pathString, filenameString);
-					photoUri = Uri.fromFile(outFile);
-					Intent i = new Intent("android.media.action.IMAGE_CAPTURE");
-					i.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-		            startActivityForResult(i, CAMERA_WITH_DATA);
-		            */
 				} else {
 					Toast.makeText(quickPost.this, "指定的版面无效", Toast.LENGTH_SHORT);
 				}
@@ -325,11 +314,13 @@ public class quickPost extends Activity implements OnClickListener {
     public static Intent getPhotoPickIntent() {  
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);  
         intent.setType("image/*");  
+        /*
         intent.putExtra("crop", "true");  
         intent.putExtra("aspectX", 1);  
         intent.putExtra("aspectY", 1);  
         intent.putExtra("outputX", 80);  
         intent.putExtra("outputY", 80);  
+        */
         intent.putExtra("return-data", true);  
         return intent;  
     } 

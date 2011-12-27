@@ -1,8 +1,12 @@
 package com.fatjay.subfunction;
 
+import java.util.Set;
+
 import com.fatjay.R;
 import com.fatjay.main.LilyActivity;
+import com.fatjay.main.userinfo;
 
+import android.R.bool;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -14,13 +18,15 @@ import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.Toast;
 
 public class searchBoard extends Activity implements OnClickListener {
+	userinfo mUserinfo;
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.searchboard);
-
+        mUserinfo = (userinfo) getApplication();
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_dropdown_item_1line, boards);
         AutoCompleteTextView textView = (AutoCompleteTextView) findViewById(R.id.search_edit);
@@ -34,12 +40,38 @@ public class searchBoard extends Activity implements OnClickListener {
 		// TODO Auto-generated method stub
 		AutoCompleteTextView textView = (AutoCompleteTextView) findViewById(R.id.search_edit);
 		String boardname = textView.getText().toString();
-		Intent mIntent = new Intent();
+		boolean isIn = false;
+		for (String element : boards) {
+			if (element.equals(boardname)) {
+				isIn = true;
+				break;
+			}
+		}
+		Intent mIntent = new Intent(searchBoard.this, threadList.class);
 		Bundle mBundle = new Bundle();
-		mBundle.putString("url", "http://bbs.nju.edu.cn/bbstdoc?board=" + boardname);
-		mIntent.putExtras(mBundle);
-		mIntent.setClass(searchBoard.this, threadList.class);
-		searchBoard.this.startActivity(mIntent);
+		if (isIn) {
+			if (mUserinfo.boardname.containsKey(boardname)) {
+				mBundle.putString("url", "http://bbs.nju.edu.cn/bbstdoc?board=" + boardname);
+				mIntent.putExtras(mBundle);
+				searchBoard.this.startActivity(mIntent);
+			} else {
+				String englishName = "";
+				Set<String> kset = mUserinfo.boardname.keySet();
+				for(String ks:kset){
+					if (mUserinfo.boardname.get(ks).equals(boardname)) {
+						englishName = ks;
+						break;
+					}
+				}
+				mBundle.putString("url", "http://bbs.nju.edu.cn/bbstdoc?board=" + englishName);
+				mIntent.putExtras(mBundle);
+				searchBoard.this.startActivity(mIntent);
+			}
+		} else {
+			Toast.makeText(searchBoard.this, "版面名称不存在", Toast.LENGTH_LONG);
+			((AutoCompleteTextView) findViewById(R.id.search_edit)).setText("");
+		}
+		
 	}
 	
 	@Override

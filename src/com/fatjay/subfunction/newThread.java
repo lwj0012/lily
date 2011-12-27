@@ -17,6 +17,8 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.xml.transform.URIResolver;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.client.ClientProtocolException;
@@ -43,11 +45,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -164,8 +168,19 @@ public class newThread extends Activity implements OnClickListener {
             doCropPhoto(photoUri);
         	break;
 		case PHOTO_PICKED_WITH_DATA:
+			if (resultCode != RESULT_OK) return;
 			Bitmap photoCaptured = data.getParcelableExtra("data");
+			Uri picUri = data.getData();
+			ContentResolver mContentResolver = getContentResolver();
+			InputStream iStream = null;
 			try {
+				iStream = mContentResolver.openInputStream(picUri);
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			try {
+                photoCaptured = BitmapFactory.decodeStream(iStream);
                 photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 600, 800, true);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -303,11 +318,13 @@ public class newThread extends Activity implements OnClickListener {
     public static Intent getPhotoPickIntent() {  
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT, null);  
         intent.setType("image/*");  
+        /*
         intent.putExtra("crop", "true");  
         intent.putExtra("aspectX", 1);  
         intent.putExtra("aspectY", 1);  
         intent.putExtra("outputX", 80);  
         intent.putExtra("outputY", 80);  
+        */ 
         intent.putExtra("return-data", true);  
         return intent;  
     } 
