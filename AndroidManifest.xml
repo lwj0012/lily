@@ -4,7 +4,7 @@
     android:versionCode="1"
     android:versionName="0.3.0" >
 
-    <uses-sdk android:minSdkVersion="8" />
+    <uses-sdk android:minSdkVersion="7" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
       <uses-permission android:name="android.permission.INTERNET" />
       <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -137,6 +137,11 @@
         <activity 
             android:name=".main.about_the_author"
             android:label="about_the_author"
+            android:theme="@android:style/Theme.Dialog">
+        </activity>
+        <activity 
+            android:name=".subfunction.searchDlg"
+            android:label="searchDlg"
             android:theme="@android:style/Theme.Dialog">
         </activity>
     </application>

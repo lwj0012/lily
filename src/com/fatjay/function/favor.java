@@ -8,6 +8,7 @@ import com.fatjay.R;
 import com.fatjay.main.userinfo;
 import com.fatjay.subfunction.favorBoard;
 import com.fatjay.subfunction.moreFavor;
+import com.fatjay.subfunction.searchDlg;
 
 import android.app.AlertDialog;
 import android.app.TabActivity;
@@ -17,14 +18,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.animation.AnimationUtils;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -99,8 +96,6 @@ public class favor extends TabActivity {
 				switchActivity(idx);
 			}
 		});
-        
-        
     }
         
     @Override
@@ -175,29 +170,28 @@ public class favor extends TabActivity {
 	
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-	        
-	        //按下键盘上返回按钮
-
-	        if(keyCode == KeyEvent.KEYCODE_BACK){
-	 
-	            new AlertDialog.Builder(this)
-	                .setTitle("")
-	                .setMessage("Are u sure to quit?")
-	                .setNegativeButton(R.string.quit_cancel, new DialogInterface.OnClickListener() {
-	                    public void onClick(DialogInterface dialog, int which) {
-	                    }
-	                })
-	                .setPositiveButton(R.string.quit_ok, new DialogInterface.OnClickListener() {
-	                    public void onClick(DialogInterface dialog, int whichButton) {
-	                        finish();
-	                    }
-	                }).show();
-	            
-	            return true;
-	        }else{        
-	            return super.onKeyDown(keyCode, event);
-	        }
-	    }
+		if(keyCode == KeyEvent.KEYCODE_BACK){
+			new AlertDialog.Builder(this)
+				.setTitle("")
+				.setMessage("Are u sure to quit?")
+				.setNegativeButton(R.string.quit_cancel, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+					}
+				})
+				.setPositiveButton(R.string.quit_ok, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						finish();
+					}
+				}).show();
+			return true;
+		} else if (keyCode == KeyEvent.KEYCODE_SEARCH) {
+			Intent search = new Intent(favor.this, searchDlg.class);
+			favor.this.startActivity(search);
+			return true;
+		} else {
+			return super.onKeyDown(keyCode, event);
+		}
+	}
 	 
 	 
 	@Override

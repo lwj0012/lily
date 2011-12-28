@@ -15,6 +15,7 @@ import com.fatjay.R;
 import com.fatjay.main.userinfo;
 import com.fatjay.subfunction.maillist;
 import com.fatjay.subfunction.moreFavor;
+import com.fatjay.subfunction.searchDlg;
 import com.fatjay.subfunction.threadContent;
 import com.fatjay.subfunction.threadList;
 
@@ -105,29 +106,50 @@ public class top extends ListActivity {
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-	        
-	        //按下键盘上返回按钮
-
-	        if(keyCode == KeyEvent.KEYCODE_BACK){
-	 
-	            new AlertDialog.Builder(top.this)
-	                .setTitle("")
-	                .setMessage("确定退出？")
-	                .setNegativeButton(R.string.quit_cancel, new DialogInterface.OnClickListener() {
-	                    public void onClick(DialogInterface dialog, int which) {
-	                    }
-	                })
-	                .setPositiveButton(R.string.quit_ok, new DialogInterface.OnClickListener() {
-	                    public void onClick(DialogInterface dialog, int whichButton) {
-	                    	System.exit(0);
-	                    }
-	                }).show();
-	            
-	            return true;
-	        }else{
-	            return super.onKeyDown(keyCode, event);
-	        }
-	    }
+		switch (keyCode) {
+		case KeyEvent.KEYCODE_BACK:
+			new AlertDialog.Builder(top.this)
+				.setTitle("")
+				.setMessage("确定退出？")
+				.setNegativeButton(R.string.quit_cancel, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+					}
+				})
+				.setPositiveButton(R.string.quit_ok, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						System.exit(0);
+					}
+			}).show();
+			return true;
+		case KeyEvent.KEYCODE_SEARCH:
+			Intent search = new Intent(top.this, searchDlg.class);
+			top.this.startActivity(search);
+			return true;
+		default:
+			return super.onKeyDown(keyCode, event);
+		}
+		
+		/*
+		if(keyCode == KeyEvent.KEYCODE_BACK){
+			new AlertDialog.Builder(top.this)
+				.setTitle("")
+				.setMessage("确定退出？")
+				.setNegativeButton(R.string.quit_cancel, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+					}
+				})
+				.setPositiveButton(R.string.quit_ok, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						System.exit(0);
+					}
+				}).show();
+		        
+			return true;
+		}else{
+			return super.onKeyDown(keyCode, event);
+		}
+		*/
+	}
 	 
 	 
 	@Override

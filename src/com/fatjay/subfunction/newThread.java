@@ -78,7 +78,7 @@ public class newThread extends Activity implements OnClickListener {
 	String picURL;
 	String author;
 	String TAG = "New thread";
-	boolean quote = true;
+	boolean quote = false;
 	private int compress_rate;
 	private ProgressDialog waitDialog;
 	private static final int CAMERA_WITH_DATA = 3023;  
@@ -128,6 +128,8 @@ public class newThread extends Activity implements OnClickListener {
 			} else {
 				pidString = pid;
 			}
+		} else {
+			((EditText)findViewById(R.id.new_title)).setText("ÎÞÖ÷Ìâ");
 		}
 		Button mButton1 = (Button)findViewById(R.id.new_send);
 		mButton1.setOnClickListener(this);
@@ -184,7 +186,11 @@ public class newThread extends Activity implements OnClickListener {
                 if (height==0) {
 					return;
 				}
-                photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+                if (width > height) {
+                	photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
+				} else {
+					photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+				}
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
@@ -208,7 +214,7 @@ public class newThread extends Activity implements OnClickListener {
     			}
                 String minute = String.valueOf(t.minute);
                 String second = String.valueOf(t.second);
-    			String filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";
+    			filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";
                 File dir = new File(TEMP_PHOTO_DIR);
 				if (!dir.exists()) {
 					dir.mkdirs();
@@ -238,7 +244,6 @@ public class newThread extends Activity implements OnClickListener {
 	        waitDialog.setCancelable(false);
 	        waitDialog.show();
             uploadFile2Svr();
-            
         	break;
 		case PHOTO_PICKED_WITH_DATA:
 			if (resultCode != RESULT_OK) {
@@ -261,7 +266,11 @@ public class newThread extends Activity implements OnClickListener {
                 if (height==0) {
 					return;
 				}
-                photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+                if (width > height) {
+                	photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
+				} else {
+					photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+				}
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
@@ -283,15 +292,25 @@ public class newThread extends Activity implements OnClickListener {
     			} else {
     				hour = String.valueOf(t.hour);
     			}
-                String minute = String.valueOf(t.minute);
-                String second = String.valueOf(t.second);
-    			String filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";                
+                String minute;
+                if (t.minute<10) {
+                	minute = "0" + String.valueOf(t.minute);
+    			} else {
+    				minute = String.valueOf(t.minute);
+    			}
+                String second;
+                if (t.second<10) {
+                	second = "0" + String.valueOf(t.second);
+    			} else {
+    				second = String.valueOf(t.second);
+    			}
+    			filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";                
                 File dir = new File(TEMP_PHOTO_DIR);
 				if (!dir.exists()) {
 					dir.mkdirs();
 				}
                 File aFile = new File(TEMP_PHOTO_DIR, filenameString);  
-                photoPath = aFile.getAbsolutePath();  
+                photoPath = aFile.getAbsolutePath();
                 
                 if (aFile.exists())
                 	aFile.delete();  
@@ -565,7 +584,6 @@ public class newThread extends Activity implements OnClickListener {
 		}
 		try {
 			newurlString = "http://bbs.nju.edu.cn/" + code + "/bbssnd?board=" + boardname;
-
 			HttpPost httpRequest = new HttpPost(newurlString);
 		    ArrayList<NameValuePair> postData = new ArrayList<NameValuePair>();
 		    postData.add(new BasicNameValuePair("title", title));
@@ -629,6 +647,7 @@ public class newThread extends Activity implements OnClickListener {
 					}
 					break;
 				default:
+					waitDialog.dismiss();
 					super.handleMessage(msg);
 			}
 		}
