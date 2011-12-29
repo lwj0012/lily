@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -24,9 +25,13 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.util.EntityUtils;
 import org.apache.http.NameValuePair;
 import org.jsoup.Jsoup;
@@ -78,13 +83,16 @@ public class newThread extends Activity implements OnClickListener {
 	String picURL;
 	String author;
 	String TAG = "New thread";
-	boolean quote = true;
+	boolean quote = false;
 	private int compress_rate;
 	private ProgressDialog waitDialog;
 	private static final int CAMERA_WITH_DATA = 3023;  
     private static final int PHOTO_PICKED_WITH_DATA = 3021;
     private static final File PHOTO_DIR = new File(Environment.getExternalStorageDirectory() + "/lily/original");
     private static final String TEMP_PHOTO_DIR = Environment.getExternalStorageDirectory() + "/lily/temp";
+    
+    private int timeoutConnection = 3000;  
+    private int timeoutSocket = 5000;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -128,6 +136,8 @@ public class newThread extends Activity implements OnClickListener {
 			} else {
 				pidString = pid;
 			}
+		} else {
+			((EditText)findViewById(R.id.new_title)).setText("ÎÞÖ÷Ìâ");
 		}
 		Button mButton1 = (Button)findViewById(R.id.new_send);
 		mButton1.setOnClickListener(this);
@@ -184,7 +194,11 @@ public class newThread extends Activity implements OnClickListener {
                 if (height==0) {
 					return;
 				}
-                photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+                if (width > height) {
+                	photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
+				} else {
+					photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+				}
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
@@ -208,7 +222,7 @@ public class newThread extends Activity implements OnClickListener {
     			}
                 String minute = String.valueOf(t.minute);
                 String second = String.valueOf(t.second);
-    			String filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";
+    			filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";
                 File dir = new File(TEMP_PHOTO_DIR);
 				if (!dir.exists()) {
 					dir.mkdirs();
@@ -238,7 +252,6 @@ public class newThread extends Activity implements OnClickListener {
 	        waitDialog.setCancelable(false);
 	        waitDialog.show();
             uploadFile2Svr();
-            
         	break;
 		case PHOTO_PICKED_WITH_DATA:
 			if (resultCode != RESULT_OK) {
@@ -261,7 +274,11 @@ public class newThread extends Activity implements OnClickListener {
                 if (height==0) {
 					return;
 				}
-                photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+                if (width > height) {
+                	photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
+				} else {
+					photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+				}
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
@@ -283,15 +300,25 @@ public class newThread extends Activity implements OnClickListener {
     			} else {
     				hour = String.valueOf(t.hour);
     			}
-                String minute = String.valueOf(t.minute);
-                String second = String.valueOf(t.second);
-    			String filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";                
+                String minute;
+                if (t.minute<10) {
+                	minute = "0" + String.valueOf(t.minute);
+    			} else {
+    				minute = String.valueOf(t.minute);
+    			}
+                String second;
+                if (t.second<10) {
+                	second = "0" + String.valueOf(t.second);
+    			} else {
+    				second = String.valueOf(t.second);
+    			}
+    			filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";                
                 File dir = new File(TEMP_PHOTO_DIR);
 				if (!dir.exists()) {
 					dir.mkdirs();
 				}
                 File aFile = new File(TEMP_PHOTO_DIR, filenameString);  
-                photoPath = aFile.getAbsolutePath();  
+                photoPath = aFile.getAbsolutePath();
                 
                 if (aFile.exists())
                 	aFile.delete();  
@@ -565,7 +592,6 @@ public class newThread extends Activity implements OnClickListener {
 		}
 		try {
 			newurlString = "http://bbs.nju.edu.cn/" + code + "/bbssnd?board=" + boardname;
-
 			HttpPost httpRequest = new HttpPost(newurlString);
 		    ArrayList<NameValuePair> postData = new ArrayList<NameValuePair>();
 		    postData.add(new BasicNameValuePair("title", title));
@@ -629,6 +655,7 @@ public class newThread extends Activity implements OnClickListener {
 					}
 					break;
 				default:
+					waitDialog.dismiss();
 					super.handleMessage(msg);
 			}
 		}
@@ -643,8 +670,14 @@ public class newThread extends Activity implements OnClickListener {
 	    		msg.what = 0;
 	    		picURL = "";
 	    		photoUri = null;
-		        HttpClient client = new DefaultHttpClient();
+		        HttpClient client;
+		        BasicHttpParams httpParameters = new BasicHttpParams();// Set the timeout in milliseconds until a connection is established.  
+			    HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
+			    HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
+		        client = new DefaultHttpClient(httpParameters);
 				client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
+				
+			    
 				String url = "http://bbs.nju.edu.cn/" + mUserinfo.getCode() + "/bbsdoupload";
 				
 				HttpPost imgPost = new HttpPost(url);
@@ -703,6 +736,12 @@ public class newThread extends Activity implements OnClickListener {
 				} catch (ClientProtocolException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+				} catch (ConnectTimeoutException e) {
+					// TODO: handle exception
+					picURL = "";
+				} catch (SocketTimeoutException e) {
+					// TODO: handle exception
+					picURL = "";
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

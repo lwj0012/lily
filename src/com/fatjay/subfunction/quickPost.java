@@ -191,7 +191,11 @@ public class quickPost extends Activity implements OnClickListener {
                 if (height==0) {
 					return;
 				}
-                photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+                if (width > height) {
+                	photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
+				} else {
+					photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+				}
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 is_compress = ((CheckBox)findViewById(R.id.quick_compress)).isChecked();
@@ -237,6 +241,12 @@ public class quickPost extends Activity implements OnClickListener {
             uploadFile2Svr();
         	break;
 		case PHOTO_PICKED_WITH_DATA:
+			if (resultCode != RESULT_OK) {
+				return;
+			}
+			if (data == null) {
+				return;
+			}
 			photoCaptured = data.getParcelableExtra("data");
 			try {
 				int width = photoCaptured.getWidth();
@@ -244,7 +254,11 @@ public class quickPost extends Activity implements OnClickListener {
                 if (height==0) {
 					return;
 				}
-                photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+                if (width > height) {
+                	photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
+				} else {
+					photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+				}
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 is_compress = ((CheckBox)findViewById(R.id.quick_compress)).isChecked();
