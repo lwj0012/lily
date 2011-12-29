@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lily</string>
+	<string name="top10">今日十大</string>
+	<string name="no_cheese">当前没有内容，请刷新或等待&#8230;</string>
+	<string name="searchboard">请输入版面名称（英文） </string>
+	<string name="morefavor_submmit">改变收藏版面排序</string>
+	<string name="quit_cancel">取消</string>
+	<string name="quit_ok">退出</string>
+	<string name="pull_to_refresh_pull_label">Pull to refresh&#8230;</string>
+    <string name="pull_to_refresh_release_label">Release to refresh&#8230;</string>
+    <string name="pull_to_refresh_refreshing_label">Loading&#8230;</string>
+    <string name="pull_to_refresh_tap_label">Tap to refresh&#8230;</string>
+    <string name="quickpost">在百合上快速发帖</string>
+    <string name="identify">验证账号</string>
+    <string name="rememberaccount">记住帐号密码？</string>
+    <string name="mail_send">发送</string>
+    <string name="mail_cancel">取消</string>
+    <string name="send_mail">回复邮件</string>
+    <string name="return_to_list">返回列表</string>
+    <string name="photo_compress_rate">设置图片压缩比例（非3g网络和wifi情况下，可能会消耗较多流量和时间）</string>
+    <string name="morefavor_confirm">确认更改</string>
+    <string name="about">关于作者</string>
+    <string name="jump_confirm">跳转到</string>
+</resources>

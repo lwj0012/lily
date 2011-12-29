@@ -1,0 +1,31 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" 
+    android:orientation="vertical"
+    android:layout_width="match_parent" 
+    android:layout_height="wrap_content">
+
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/searchboard" />
+
+    </LinearLayout>
+
+    <AutoCompleteTextView
+        android:id="@+id/search_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+    </AutoCompleteTextView>
+
+    <Button
+        android:id="@+id/search_go"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go!!!" />
+
+</LinearLayout>

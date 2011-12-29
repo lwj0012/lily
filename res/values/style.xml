@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="menu_item">
+        <item name="android:layout_width">96dp</item>
+        <item name="android:layout_height">42dp</item>
+        <item name="android:button">@null</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:background">@drawable/menu_item_bg</item>
+        <item name="android:layout_weight">1</item>
+    </style>
+</resources>

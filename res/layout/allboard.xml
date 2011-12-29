@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TabHost xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/tabhost"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+		<HorizontalScrollView android:layout_height="wrap_content"
+                android:layout_width="fill_parent" android:scrollbars="none">
+			<RadioGroup
+			    android:id="@+id/allboard_rg"
+			    android:layout_width="fill_parent"
+			    android:layout_height="48px"
+			    android:background="#f00"
+			    android:orientation="horizontal" >
+			    <RadioButton
+			        android:id="@+id/allboard_search"
+			        style="@+style/menu_item"
+			        android:checked="true"
+			        android:text="搜索板块" />
+			    <RadioButton
+			        android:id="@+id/allboard_mainpage"
+			        style="@+style/menu_item"
+			        android:text="首页板块" />
+			    <RadioButton
+			        android:id="@+id/allboard_hotbrd"
+			        style="@+style/menu_item"
+			        android:text="热门版面" />
+			    <RadioButton
+			        android:id="@+id/allboard_recbrd"
+			        style="@+style/menu_item"
+			        android:text="推荐板面" />
+			</RadioGroup>
+        </HorizontalScrollView>
+        <TabWidget
+            android:id="@android:id/tabs"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="1dip"
+            android:paddingRight="1dip"
+            android:paddingTop="4dip"
+            android:visibility="gone" />
+        <FrameLayout
+            android:id="@android:id/tabcontent"
+            android:layout_width="fill_parent"
+            android:layout_height="0dip"
+            android:layout_weight="1.11" />
+    </LinearLayout>
+</TabHost>

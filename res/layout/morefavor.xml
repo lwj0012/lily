@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_vertical" >
+    <RelativeLayout 
+	    android:layout_width="match_parent"
+	    android:layout_height="30dp"
+	    android:orientation="horizontal" >
+	    <TextView
+	        android:text="@string/morefavor_submmit"
+	        android:layout_width="wrap_content"
+	        android:layout_height="fill_parent"
+	        android:textSize="24dp"
+	        android:layout_alignParentTop="true" />
+	    <Button
+	        android:id="@+id/morefavor_submmit"
+	        android:layout_width="wrap_content"
+	        android:layout_height="fill_parent"
+	        android:layout_alignParentRight="true"
+	        android:layout_alignParentTop="true"
+	        android:textSize="12dp"
+	        android:text="@string/morefavor_confirm" />
+	</RelativeLayout>
+	<com.fatjay.effects.ListViewInterceptor
+		android:id="@android:id/list"
+		android:layout_width="fill_parent" 
+		android:layout_height="fill_parent"
+		android:drawSelectorOnTop="false" 
+	/>
+</LinearLayout>
