@@ -190,11 +190,13 @@ public class newThread extends Activity implements OnClickListener {
                 if (height==0) {
 					return;
 				}
-                if (width > height) {
-                	photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
-				} else {
-					photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
-				}
+                if (width*height > 480000) {
+                	if (width > height) {
+                		photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
+                	} else {
+                		photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+                	}
+                }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
@@ -270,11 +272,13 @@ public class newThread extends Activity implements OnClickListener {
                 if (height==0) {
 					return;
 				}
-                if (width > height) {
-                	photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
-				} else {
-					photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
-				}
+                if (width*height > 480000) {
+                	if (width > height) {
+                		photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
+                	} else {
+                		photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+                	}
+                }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
@@ -508,7 +512,6 @@ public class newThread extends Activity implements OnClickListener {
 				return true;
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
