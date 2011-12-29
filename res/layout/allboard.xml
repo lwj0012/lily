@@ -19,11 +19,11 @@
 			        android:id="@+id/allboard_search"
 			        style="@+style/menu_item"
 			        android:checked="true"
-			        android:text="搜索板块" />
+			        android:text="搜索板面" />
 			    <RadioButton
 			        android:id="@+id/allboard_mainpage"
 			        style="@+style/menu_item"
-			        android:text="首页板块" />
+			        android:text="首页板面" />
 			    <RadioButton
 			        android:id="@+id/allboard_hotbrd"
 			        style="@+style/menu_item"

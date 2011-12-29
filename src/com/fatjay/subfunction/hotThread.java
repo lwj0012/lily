@@ -57,6 +57,7 @@ public class hotThread extends ListActivity {
 		Bundle mBundle = new Bundle();
 		mBundle.putString("url", url);
 		mBundle.putString("title", temp[1]);
+		mBundle.putString("board", mUserinfo.boardname.get(temp[3]));
 		startread.putExtras(mBundle);
 		hotThread.this.startActivity(startread);
 	}

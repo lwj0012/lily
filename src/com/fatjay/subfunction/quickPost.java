@@ -87,8 +87,8 @@ public class quickPost extends Activity implements OnClickListener {
     private static final int PHOTO_PICKED_WITH_DATA = 3021;
     private static final File PHOTO_DIR = new File(Environment.getExternalStorageDirectory() + "/lily/temp");
 	
-    private int timeoutConnection = 3000;  
-    private int timeoutSocket = 5000;
+    private int timeoutConnection = 10000;  
+    private int timeoutSocket = 10000;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -102,7 +102,7 @@ public class quickPost extends Activity implements OnClickListener {
         favor = mContext.getSharedPreferences("compress_rate", 0);
         String temp = favor.getString("rate", null);
         compress_rate = Integer.valueOf(temp);
-        
+        ((EditText)findViewById(R.id.quick_title)).setText("ÎÞÖ÷Ìâ");
 		getIdentify();
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_dropdown_item_1line, boards);
@@ -519,7 +519,16 @@ public class quickPost extends Activity implements OnClickListener {
             Bitmap photoCaptured = BitmapFactory.decodeStream(imgIS);
             int width = photoCaptured.getWidth();
             int height = photoCaptured.getHeight();
-            photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+            if (height==0) {
+				return;
+			}
+            if (width*height > 480000) {
+            	if (width > height) {
+            		photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
+            	} else {
+            		photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
+            	}
+            }
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             photoCaptured.compress(Bitmap.CompressFormat.JPEG, compress_rate, baos);
             

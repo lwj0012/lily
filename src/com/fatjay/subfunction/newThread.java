@@ -90,8 +90,8 @@ public class newThread extends Activity implements OnClickListener {
     private static final File PHOTO_DIR = new File(Environment.getExternalStorageDirectory() + "/lily/original");
     private static final String TEMP_PHOTO_DIR = Environment.getExternalStorageDirectory() + "/lily/temp";
     
-    private int timeoutConnection = 3000;  
-    private int timeoutSocket = 5000;
+    private int timeoutConnection = 10000;  
+    private int timeoutSocket = 10000;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
