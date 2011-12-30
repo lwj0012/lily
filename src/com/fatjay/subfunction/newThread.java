@@ -3,6 +3,7 @@ package com.fatjay.subfunction;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,7 +11,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -47,7 +49,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -92,6 +93,8 @@ public class newThread extends Activity implements OnClickListener {
     
     private int timeoutConnection = 10000;  
     private int timeoutSocket = 10000;
+    
+    private int IMAGE_MAX_SIZE = 1000;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -167,186 +170,185 @@ public class newThread extends Activity implements OnClickListener {
 	@Override  
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {  
         super.onActivityResult(requestCode, resultCode, data);  
-        ContentResolver mContentResolver = getContentResolver();
         Bitmap photoCaptured = null;
-        InputStream iStream = null;
         switch (requestCode) {
-		case CAMERA_WITH_DATA: 
-            if (resultCode != RESULT_OK)
-            	return;
-            if (photoUri == null) {
-				return;
-			}
-			try {
-				iStream = mContentResolver.openInputStream(photoUri);
-			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			try {
-                photoCaptured = BitmapFactory.decodeStream(iStream);
-                int width = photoCaptured.getWidth();
-                int height = photoCaptured.getHeight();
-                if (height==0) {
+			case CAMERA_WITH_DATA: 
+	            if (resultCode != RESULT_OK)
+	            	return;
+	            if (photoUri == null) {
 					return;
 				}
-                if (width*height > 480000) {
-                	if (width > height) {
-                		photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
-                	} else {
-                		photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
-                	}
-                }
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-                is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
-                if (is_compress) {
-                	photoCaptured.compress(Bitmap.CompressFormat.JPEG, compress_rate, baos);
-				} else {
-					photoCaptured.compress(Bitmap.CompressFormat.JPEG, 70, baos);
-				}
-                
-                byte[] photoBytes = baos.toByteArray();
-                Time t=new Time();
-                t.setToNow();
-                String year = String.valueOf(t.year);
-                String month = String.valueOf(t.month+1);
-                String day = String.valueOf(t.monthDay);
-                String hour;
-                if (t.hour<10) {
-    				hour = "0" + String.valueOf(t.hour);
-    			} else {
-    				hour = String.valueOf(t.hour);
-    			}
-                String minute = String.valueOf(t.minute);
-                String second = String.valueOf(t.second);
-    			filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";
-                File dir = new File(TEMP_PHOTO_DIR);
-				if (!dir.exists()) {
-					dir.mkdirs();
-				}
-                File aFile = new File(TEMP_PHOTO_DIR, filenameString);  
-                photoPath = aFile.getAbsolutePath();  
-                
-                if (aFile.exists())
-                	aFile.delete();  
-                aFile.createNewFile();
-
-                FileOutputStream fos = new FileOutputStream(aFile);  
-                fos.write(photoBytes);
-                fos.close();
-                Log.i(TAG, "写入文件" + TEMP_PHOTO_DIR + filenameString);
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();  
-            } catch (IOException e) {  
-                e.printStackTrace();  
-            }
-            waitDialog = new ProgressDialog(newThread.this);
-	        waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-	        waitDialog.setMessage("请稍候...");
-	        waitDialog.setTitle("正在上传照片");
-	        waitDialog.setIndeterminate(true);
-	        waitDialog.setCancelable(false);
-	        waitDialog.show();
-            uploadFile2Svr();
-        	break;
-		case PHOTO_PICKED_WITH_DATA:
-			if (resultCode != RESULT_OK) {
-				return;
-			}
-			Uri picUri = data.getData();
-			if (picUri == null) {
-				return;
-			}
-			try {
-				iStream = mContentResolver.openInputStream(picUri);
-			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			try {
-                photoCaptured = BitmapFactory.decodeStream(iStream);
-                int width = photoCaptured.getWidth();
-                int height = photoCaptured.getHeight();
-                if (height==0) {
+				try {
+					photoCaptured = decodeStream(photoUri);
+	                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	
+	                is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
+	                if (is_compress) {
+	                	photoCaptured.compress(Bitmap.CompressFormat.JPEG, compress_rate, baos);
+					} else {
+						photoCaptured.compress(Bitmap.CompressFormat.JPEG, 70, baos);
+					}
+	                
+	                byte[] photoBytes = baos.toByteArray();
+	                Time t=new Time();
+	                t.setToNow();
+	                String year = String.valueOf(t.year);
+	                String month = String.valueOf(t.month+1);
+	                String day = String.valueOf(t.monthDay);
+	                String hour;
+	                if (t.hour<10) {
+	    				hour = "0" + String.valueOf(t.hour);
+	    			} else {
+	    				hour = String.valueOf(t.hour);
+	    			}
+	                String minute;
+	                if (t.minute<10) {
+	                	minute = "0" + String.valueOf(t.minute);
+	    			} else {
+	    				minute = String.valueOf(t.minute);
+	    			}
+	                String second;
+	                if (t.second<10) {
+	                	second = "0" + String.valueOf(t.second);
+	    			} else {
+	    				second = String.valueOf(t.second);
+	    			}
+	    			filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";
+	                File dir = new File(TEMP_PHOTO_DIR);
+					if (!dir.exists()) {
+						dir.mkdirs();
+					}
+	                File aFile = new File(TEMP_PHOTO_DIR, filenameString);  
+	                photoPath = aFile.getAbsolutePath();  
+	                
+	                if (aFile.exists())
+	                	aFile.delete();  
+	                aFile.createNewFile();
+	
+	                FileOutputStream fos = new FileOutputStream(aFile);  
+	                fos.write(photoBytes);
+	                fos.close();
+	                Log.i(TAG, "写入文件" + TEMP_PHOTO_DIR + filenameString);
+	
+	            } catch (FileNotFoundException e) {
+	                e.printStackTrace();  
+	            } catch (IOException e) {  
+	                e.printStackTrace();  
+	            }
+	            waitDialog = new ProgressDialog(newThread.this);
+		        waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+		        waitDialog.setMessage("请稍候...");
+		        waitDialog.setTitle("正在上传照片");
+		        waitDialog.setIndeterminate(true);
+		        waitDialog.setCancelable(false);
+		        waitDialog.show();
+	            uploadFile2Svr();
+	        	break;
+			case PHOTO_PICKED_WITH_DATA:
+				if (resultCode != RESULT_OK) {
 					return;
 				}
-                if (width*height > 480000) {
-                	if (width > height) {
-                		photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800, 800*height/width, true);
-                	} else {
-                		photoCaptured = Bitmap.createScaledBitmap(photoCaptured, 800*width/height, 800, true);
-                	}
-                }
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-                is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
-                if (is_compress) {
-                	photoCaptured.compress(Bitmap.CompressFormat.JPEG, compress_rate, baos);
-				} else {
-					photoCaptured.compress(Bitmap.CompressFormat.JPEG, 70, baos);
+				Uri picUri = data.getData();
+				if (picUri == null) {
+					return;
 				}
-                
-                byte[] photoBytes = baos.toByteArray();
-                Time t=new Time();
-                t.setToNow();
-                String year = String.valueOf(t.year);
-                String month = String.valueOf(t.month+1);
-                String day = String.valueOf(t.monthDay);
-                String hour;
-                if (t.hour<10) {
-    				hour = "0" + String.valueOf(t.hour);
-    			} else {
-    				hour = String.valueOf(t.hour);
-    			}
-                String minute;
-                if (t.minute<10) {
-                	minute = "0" + String.valueOf(t.minute);
-    			} else {
-    				minute = String.valueOf(t.minute);
-    			}
-                String second;
-                if (t.second<10) {
-                	second = "0" + String.valueOf(t.second);
-    			} else {
-    				second = String.valueOf(t.second);
-    			}
-    			filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";                
-                File dir = new File(TEMP_PHOTO_DIR);
-				if (!dir.exists()) {
-					dir.mkdirs();
-				}
-                File aFile = new File(TEMP_PHOTO_DIR, filenameString);  
-                photoPath = aFile.getAbsolutePath();
-                
-                if (aFile.exists())
-                	aFile.delete();  
-                aFile.createNewFile();
-
-                FileOutputStream fos = new FileOutputStream(aFile);  
-                fos.write(photoBytes);
-                fos.close();
-                Log.i(TAG, "写入文件" + TEMP_PHOTO_DIR + filenameString);
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();  
-            } catch (IOException e) {  
-                e.printStackTrace();  
-            }
-            waitDialog = new ProgressDialog(newThread.this);
-	        waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-	        waitDialog.setMessage("请稍候...");
-	        waitDialog.setTitle("正在上传照片");
-	        waitDialog.setIndeterminate(true);
-	        waitDialog.setCancelable(false);
-	        waitDialog.show();
-            uploadFile2Svr();
-        	break;
-		default:
-			break;
+				try {
+					photoCaptured = decodeStream(picUri);
+	                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	                is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
+	                if (is_compress) {
+	                	photoCaptured.compress(Bitmap.CompressFormat.JPEG, compress_rate, baos);
+					} else {
+						photoCaptured.compress(Bitmap.CompressFormat.JPEG, 70, baos);
+					}
+	                
+	                byte[] photoBytes = baos.toByteArray();
+	                Time t=new Time();
+	                t.setToNow();
+	                String year = String.valueOf(t.year);
+	                String month = String.valueOf(t.month+1);
+	                String day = String.valueOf(t.monthDay);
+	                String hour;
+	                if (t.hour<10) {
+	    				hour = "0" + String.valueOf(t.hour);
+	    			} else {
+	    				hour = String.valueOf(t.hour);
+	    			}
+	                String minute;
+	                if (t.minute<10) {
+	                	minute = "0" + String.valueOf(t.minute);
+	    			} else {
+	    				minute = String.valueOf(t.minute);
+	    			}
+	                String second;
+	                if (t.second<10) {
+	                	second = "0" + String.valueOf(t.second);
+	    			} else {
+	    				second = String.valueOf(t.second);
+	    			}
+	    			filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";                
+	                File dir = new File(TEMP_PHOTO_DIR);
+					if (!dir.exists()) {
+						dir.mkdirs();
+					}
+	                File aFile = new File(TEMP_PHOTO_DIR, filenameString);  
+	                photoPath = aFile.getAbsolutePath();
+	                
+	                if (aFile.exists())
+	                	aFile.delete();  
+	                aFile.createNewFile();
+	
+	                FileOutputStream fos = new FileOutputStream(aFile);  
+	                fos.write(photoBytes);
+	                fos.close();
+	                Log.i(TAG, "写入文件" + TEMP_PHOTO_DIR + filenameString);
+	
+	            } catch (FileNotFoundException e) {
+	                e.printStackTrace();  
+	            } catch (IOException e) {  
+	                e.printStackTrace();  
+	            }
+	            waitDialog = new ProgressDialog(newThread.this);
+		        waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+		        waitDialog.setMessage("请稍候...");
+		        waitDialog.setTitle("正在上传照片");
+		        waitDialog.setIndeterminate(true);
+		        waitDialog.setCancelable(false);
+		        waitDialog.show();
+	            uploadFile2Svr();
+	        	break;
+			default:
+				break;
 		}
-    }   
+    }
+	
+	private Bitmap decodeStream(Uri uri){
+        Bitmap b = null;
+        try {
+            //Decode image size
+            BitmapFactory.Options o = new BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            
+            //File file = new File(uri.toString());
+            InputStream fis = getContentResolver().openInputStream(uri);
+            BitmapFactory.decodeStream(fis,null,o);
+
+            int scale = 1;
+            if (o.outHeight > IMAGE_MAX_SIZE || o.outWidth > IMAGE_MAX_SIZE) {
+                scale = (int)Math.pow(2, (int) Math.round(Math.log(IMAGE_MAX_SIZE / (double) Math.max(o.outHeight, o.outWidth)) / Math.log(0.5)));
+            }
+
+            //Decode with inSampleSize
+            BitmapFactory.Options o2 = new BitmapFactory.Options();
+            o2.inSampleSize = scale;
+            //fis = new FileInputStream(file);
+            fis = getContentResolver().openInputStream(uri);
+            b = BitmapFactory.decodeStream(fis, null, o2);
+            fis.close();
+        } catch (IOException e) {
+        }
+        return b;
+    }
 
 	private void doPickPhotoAction() {  
         Context context = newThread.this;  
@@ -412,8 +414,18 @@ public class newThread extends Activity implements OnClickListener {
 			} else {
 				hour = String.valueOf(t.hour);
 			}
-            String minute = String.valueOf(t.minute);
-            String second = String.valueOf(t.second);
+            String minute;
+            if (t.minute<10) {
+            	minute = "0" + String.valueOf(t.minute);
+			} else {
+				minute = String.valueOf(t.minute);
+			}
+            String second;
+            if (t.second<10) {
+            	second = "0" + String.valueOf(t.second);
+			} else {
+				second = String.valueOf(t.second);
+			}
 			String filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";
 			File outFile = new File(PHOTO_DIR, filenameString);
             final Intent intent = getTakePickIntent(outFile);  

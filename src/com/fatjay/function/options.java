@@ -2,20 +2,41 @@ package com.fatjay.function;
 
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.util.EntityUtils;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import com.fatjay.R;
 import com.fatjay.main.LilyActivity;
 import com.fatjay.main.about_the_author;
 import com.fatjay.main.userinfo;
 import com.fatjay.subfunction.mail;
+import com.fatjay.subfunction.moreFavor;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,6 +59,11 @@ public class options extends Activity implements OnItemSelectedListener {
 	private ArrayAdapter<String> adapter;
 	private static final String[] m={"20","30","40","50","60","80"};
 	
+	private int timeoutSocket = 10000;
+	private int timeoutConnection = 10000;
+	
+	ProgressDialog waitDialog;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -58,6 +84,8 @@ public class options extends Activity implements OnItemSelectedListener {
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				getIdentify();
+				waitDialog = ProgressDialog.show(getParent(), "", "正在同步收藏...", true, true);
+				loadFav();
 			}
 		});
 		spinner = (Spinner)findViewById(R.id.setting_photo);
@@ -73,7 +101,6 @@ public class options extends Activity implements OnItemSelectedListener {
 				spinner.setSelection(i);
 			}
 		}
-		
 	}
 
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -174,5 +201,81 @@ public class options extends Activity implements OnItemSelectedListener {
 	public void onNothingSelected(AdapterView<?> arg0) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	private Handler handler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			// TODO Auto-generated method stub
+			switch (msg.what) {
+				case 0:
+					waitDialog.cancel();
+					Intent mIntent = new Intent(options.this, moreFavor.class);
+					options.this.startActivity(mIntent);
+					break;
+				default:
+					super.handleMessage(msg);
+			}
+		}
+	};
+
+	private ExecutorService executorService = Executors.newFixedThreadPool(5);
+	
+	public void loadFav() {
+		executorService.submit(new Runnable() {
+			public void run() {
+	    		Message msg = new Message();
+	    		msg.what = 0;
+				SharedPreferences favor = mContext.getSharedPreferences("favor", 0);
+				Editor mEditor = favor.edit();
+				String code = mUserinfo.getCode();
+				String cookie = mUserinfo.getCookies();
+				String urlString = "http://bbs.nju.edu.cn/" + code + "/bbsmybrd";
+				String sync_favor = "";
+				String result = null;
+				try {
+					HttpClient client;
+			        BasicHttpParams httpParameters = new BasicHttpParams();// Set the timeout in milliseconds until a connection is established.  
+				    HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection );
+				    HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket );
+				    client = new DefaultHttpClient(httpParameters);
+					client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
+					HttpGet uploadGet = new HttpGet(urlString);
+		            uploadGet.addHeader("Cookie", cookie);
+		            HttpResponse httpResponse = client.execute(uploadGet);
+		            if (httpResponse.getStatusLine().getStatusCode() == 200) {
+						result = EntityUtils.toString(httpResponse.getEntity());
+		            }
+				} catch (ClientProtocolException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ConnectTimeoutException e) {
+					// TODO: handle exception
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				Document doc = Jsoup.parse(result);
+				Elements boards = doc.select("input[checked]");
+				for (Element board : boards) {
+					String boardName = board.nextSibling().toString();
+					boardName = boardName.substring(1, boardName.length());
+					boardName = boardName.substring(boardName.indexOf(">")+1);
+					boardName = boardName.substring(0, boardName.indexOf("("));
+					sync_favor = sync_favor + boardName + "#";
+				}
+				if (sync_favor.equals("")) {
+					mEditor.putString("favor", "D_Computer#Joke#Pictures");
+					mEditor.commit();
+					Toast.makeText(options.this, "你还没有在百合上面预订任何版面，将默认为你添加三个版面", Toast.LENGTH_LONG);
+				} else {
+					mEditor.putString("favor", sync_favor.substring(0, sync_favor.length()-1));
+					mEditor.commit();
+				}
+				handler.sendMessage(msg);
+			}
+		});
 	}
 }

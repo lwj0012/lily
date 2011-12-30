@@ -337,8 +337,8 @@ public class top extends ListActivity {
 				boardTextView.setLayoutParams(boardLayoutParams);
 				
 				replyTextView = new TextView(context);
-				replyTextView.setText(reply);
-				replyTextView.setTextColor(Color.rgb(255, 128, 0));
+				replyTextView.setText(reply + "ÈË¸úÌû");
+				replyTextView.setTextColor(Color.rgb(227, 23, 13));
 				RelativeLayout.LayoutParams infoLayoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
 						RelativeLayout.LayoutParams.WRAP_CONTENT);
 				infoLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
@@ -365,8 +365,8 @@ public class top extends ListActivity {
 			}
 			
 			public void setReply(String reply) {
-				replyTextView.setText(reply);
-				replyTextView.setTextColor(Color.rgb(255, 128, 0));
+				replyTextView.setText(reply + "ÈË¸úÌû");
+				replyTextView.setTextColor(Color.rgb(227, 23, 13));
 	        }
 			
 			public void setAuthor(String author) {
