@@ -1,0 +1,20 @@
+<RelativeLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" >
+    <Button
+        android:id="@+id/ccc_dlg_go"
+        android:layout_width="wrap_content"
+        android:layout_height="45dp"
+		android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/cc_confirm" />
+    <AutoCompleteTextView
+        android:id="@+id/ccc_dlg_edit"
+        android:layout_width="fill_parent"
+        android:layout_height="45dp"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@+id/ccc_dlg_go" >
+        <requestFocus />
+    </AutoCompleteTextView>
+</RelativeLayout>

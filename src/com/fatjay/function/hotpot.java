@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -19,12 +21,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.GestureDetector;
+import android.os.Handler;
+import android.os.Message;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.View;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.animation.AnimationUtils;
 import android.widget.RadioButton;
@@ -37,13 +39,13 @@ public class hotpot extends TabActivity {
 	Context mContext;
 	RadioGroup rGroup;
 	public int pageid=0;
+	public static hotpot instance;
 	public Map<Integer, ArrayList<String>> data = new HashMap<Integer, ArrayList<String>>();
+	ArrayList<TabHost.TabSpec> tabSpecs = new ArrayList<TabHost.TabSpec>();
 	
 	private static final int SWIPE_MIN_DISTANCE = 120;
     private static final int SWIPE_MAX_OFF_PATH = 250;
 	private static final int SWIPE_THRESHOLD_VELOCITY = 200;
-	private GestureDetector gestureDetector;
-	View.OnTouchListener gestureListener;
 	int current;
 	
     /** Called when the activity is first created. */
@@ -51,28 +53,90 @@ public class hotpot extends TabActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.hotnews);
-        parsePage();
+        
         mHost = getTabHost();
         mContext = this;
+        instance = this;
         
-        Intent board = new Intent(mContext, hotThread.class);
-        mHost.addTab(mHost.newTabSpec("board1").setIndicator("Board1").setContent(board));
-        mHost.addTab(mHost.newTabSpec("board2").setIndicator("Board2").setContent(board));
-        mHost.addTab(mHost.newTabSpec("board3").setIndicator("Board3").setContent(board));
-        mHost.addTab(mHost.newTabSpec("board4").setIndicator("board4").setContent(board));
-        mHost.addTab(mHost.newTabSpec("board5").setIndicator("board5").setContent(board));
-        mHost.addTab(mHost.newTabSpec("board6").setIndicator("board6").setContent(board));
-        mHost.addTab(mHost.newTabSpec("board7").setIndicator("board7").setContent(board));
-        mHost.addTab(mHost.newTabSpec("board8").setIndicator("board8").setContent(board));
-        mHost.addTab(mHost.newTabSpec("board9").setIndicator("board9").setContent(board));
-        mHost.addTab(mHost.newTabSpec("board10").setIndicator("board10").setContent(board));
-        mHost.addTab(mHost.newTabSpec("board11").setIndicator("board11").setContent(board));
-        mHost.addTab(mHost.newTabSpec("board12").setIndicator("board12").setContent(board));
+        int counter = 0;
+        Intent board0 = new Intent(mContext, hotThread.class);
+        Bundle mBundle;
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board0.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board1").setIndicator("Board1").setContent(board0));
+        Intent board1 = new Intent(mContext, hotThread.class);
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board1.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board2").setIndicator("Board2").setContent(board1));
+        Intent board2 = new Intent(mContext, hotThread.class);
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board2.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board3").setIndicator("Board3").setContent(board2));
+        Intent board3 = new Intent(mContext, hotThread.class);
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board3.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board4").setIndicator("board4").setContent(board3));
+        Intent board4 = new Intent(mContext, hotThread.class);
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board4.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board5").setIndicator("board5").setContent(board4));
+        Intent board5 = new Intent(mContext, hotThread.class);
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board5.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board6").setIndicator("board6").setContent(board5));
+        Intent board6 = new Intent(mContext, hotThread.class);
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board6.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board7").setIndicator("board7").setContent(board6));
+        Intent board7 = new Intent(mContext, hotThread.class);
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board7.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board8").setIndicator("board8").setContent(board7));
+        Intent board8 = new Intent(mContext, hotThread.class);
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board8.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board9").setIndicator("board9").setContent(board8));
+        Intent board9 = new Intent(mContext, hotThread.class);
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board9.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board10").setIndicator("board10").setContent(board9));
+        Intent board10 = new Intent(mContext, hotThread.class);
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board10.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board11").setIndicator("board11").setContent(board10));
+        Intent board11 = new Intent(mContext, hotThread.class);
+        mBundle = new Bundle();
+        mBundle.putInt("id", counter);
+        board11.putExtras(mBundle);
+        counter ++;
+        mHost.addTab(mHost.newTabSpec("board12").setIndicator("board12").setContent(board11));
         
         rGroup = (RadioGroup)findViewById(R.id.hotpot_rg);
         rGroup.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(RadioGroup group, int checkedId) {
-				int idx = -1;
+				int idx = 0;
 				if (checkedId == R.id.hotpot_rb01) {
 					idx = 0;
 					pageid = idx;
@@ -113,31 +177,22 @@ public class hotpot extends TabActivity {
 				switchActivity(idx);
 			}
 		});
-        
-        gestureDetector = new GestureDetector(new MyGestureDetector());
-        gestureListener = new View.OnTouchListener() {
-            public boolean onTouch(View v, MotionEvent event) {
-                if (gestureDetector.onTouchEvent(event)) {
-                    return true;
-                }
-                return false;
-            }
-        };
+        parsePage();
     }
         
-	void switchActivity(int idx) {
+	public void switchActivity(int idx) {
 		int n = mHost.getCurrentTab();
 	
 		if (idx < n) {
-			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_left_out));
-		} else if (idx > n) {
 			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_right_out));
+		} else if (idx > n) {
+			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_left_out));
 		}
 		mHost.setCurrentTab(idx);
 		if (idx < n) {
-			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_left_in));
-		} else if (idx > n) {
 			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_right_in));
+		} else if (idx > n) {
+			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_left_in));
 		}
 		
 		RadioButton rb = (RadioButton) rGroup.getChildAt(idx);
@@ -212,49 +267,72 @@ public class hotpot extends TabActivity {
         }
     }
     
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (gestureDetector.onTouchEvent(event))
-	        return true;
-	    else
-	    	return false;
-    }
+//    @Override
+//    public boolean onTouchEvent(MotionEvent event) {
+//        if (gestureDetector.onTouchEvent(event))
+//	        return true;
+//	    else
+//	    	return false;
+//    }
+	
+	private Handler handler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			// TODO Auto-generated method stub
+			switch (msg.what) {
+				case 0:
+					break;
+				default:
+					super.handleMessage(msg);
+			}
+		}
+	};
+
+	private ExecutorService executorService = Executors.newFixedThreadPool(5);
 	
 	void parsePage() {
-		Document doc = null;
-		int counter = -1;
-		Elements info = null;
-		String threadurl;
-		String threadname;
-		String boardurl;
-		String boardname;
-		try {
-			doc = Jsoup.connect("http://bbs.nju.edu.cn/bbstopall").get();
-			Elements itemsElements = doc.select("td");
-			for (Element each : itemsElements) {
-				if (each.select("img").size()!=0) {
-					counter ++;
-				} else {
-					info = each.select("a");
-					if (info.size()==0) {
-						continue;
+		executorService.submit(new Runnable() {
+			public void run() {
+				Message msg = new Message();
+	    		msg.what = 0;
+				Document doc = null;
+				int counter = -1;
+				Elements info = null;
+				String threadurl;
+				String threadname;
+				String boardurl;
+				String boardname;
+				try {
+					doc = Jsoup.connect("http://bbs.nju.edu.cn/bbstopall").get();
+					Elements itemsElements = doc.select("td");
+					for (Element each : itemsElements) {
+						if (each.select("img").size()!=0) {
+							counter ++;
+						} else {
+							info = each.select("a");
+							if (info.size()==0) {
+								continue;
+							}
+							threadurl = info.get(0).attr("abs:href");
+							threadname = info.get(0).text();
+							boardurl = info.get(1).attr("abs:href");
+							boardname = info.get(1).text();
+							if (data.containsKey(Integer.valueOf(counter))) {
+								data.get(Integer.valueOf(counter)).add(threadurl + '#' + threadname + '#' + boardurl + '#' + boardname);
+							} else {
+								data.put(Integer.valueOf(counter), new ArrayList<String>());
+								(data.get(Integer.valueOf(counter))).add(threadurl + '#' + threadname + '#' + boardurl + '#' + boardname);
+							}
+							
+						}
 					}
-					threadurl = info.get(0).attr("abs:href");
-					threadname = info.get(0).text();
-					boardurl = info.get(1).attr("abs:href");
-					boardname = info.get(1).text();
-					if (data.containsKey(Integer.valueOf(counter))) {
-						data.get(Integer.valueOf(counter)).add(threadurl + '#' + threadname + '#' + boardurl + '#' + boardname);
-					} else {
-						data.put(Integer.valueOf(counter), new ArrayList<String>());
-						(data.get(Integer.valueOf(counter))).add(threadurl + '#' + threadname + '#' + boardurl + '#' + boardname);
-					}
-					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
+				handler.sendMessage(msg);
 			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		});
 	}
 }

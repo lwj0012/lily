@@ -2,14 +2,11 @@ package com.fatjay.subfunction;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Random;
@@ -126,7 +123,7 @@ public class quickPost extends Activity implements OnClickListener {
 		switch (v.getId()) {
 		case R.id.quick_send:
 			if (textView.getText().toString().equals("")) {
-				Toast.makeText(quickPost.this, "请先指定版面", Toast.LENGTH_SHORT);
+				Toast.makeText(getApplicationContext(), "请先指定版面", Toast.LENGTH_SHORT);
 			} else {
 				boolean isIn = false;
 				boardname = textView.getText().toString();
@@ -140,16 +137,16 @@ public class quickPost extends Activity implements OnClickListener {
 					if (send()) {
 						finish();
 					} else {
-						Toast.makeText(quickPost.this, "网络似乎有点问题，请稍后重试", Toast.LENGTH_SHORT);
+						Toast.makeText(getApplicationContext(), "网络似乎有点问题，请稍后重试", Toast.LENGTH_SHORT);
 					}
 				} else {
-					Toast.makeText(quickPost.this, "指定的版面无效", Toast.LENGTH_SHORT);
+					Toast.makeText(getApplicationContext(), "指定的版面无效", Toast.LENGTH_SHORT);
 				}
 			}
 			break;
 		case R.id.quick_photo:
 			if (textView.getText().toString().equals("")) {
-				Toast.makeText(quickPost.this, "请先指定版面", Toast.LENGTH_SHORT);
+				Toast.makeText(getApplicationContext(), "请先指定版面", Toast.LENGTH_SHORT);
 			} else {
 				boolean isIn = false;
 				boardname = textView.getText().toString();
@@ -169,7 +166,7 @@ public class quickPost extends Activity implements OnClickListener {
 					}
 					doPickPhotoAction();
 				} else {
-					Toast.makeText(quickPost.this, "指定的版面无效", Toast.LENGTH_SHORT);
+					Toast.makeText(getApplicationContext(), "指定的版面无效", Toast.LENGTH_SHORT);
 				}
 				
 			}
@@ -368,7 +365,7 @@ public class quickPost extends Activity implements OnClickListener {
                             	doTakePhoto();// 用户点击了从照相机获取  
                             }  
                             else{  
-                                Toast.makeText(quickPost.this, "没有SD卡", Toast.LENGTH_LONG);
+                                Toast.makeText(getApplicationContext(), "没有SD卡", Toast.LENGTH_LONG);
                             }  
                             break;  
                               
@@ -422,7 +419,7 @@ public class quickPost extends Activity implements OnClickListener {
             final Intent intent = getTakePickIntent(outFile);  
             startActivityForResult(intent, CAMERA_WITH_DATA);  
         } catch (ActivityNotFoundException e) {  
-            Toast.makeText(this, "无法创建图片",  
+            Toast.makeText(getApplicationContext(), "无法创建图片",  
                     Toast.LENGTH_LONG).show();  
         }  
     }  
@@ -440,7 +437,7 @@ public class quickPost extends Activity implements OnClickListener {
             final Intent intent = getPhotoPickIntent();  
             startActivityForResult(intent, PHOTO_PICKED_WITH_DATA);  
         } catch (ActivityNotFoundException e) {  
-            Toast.makeText(this, "无法打开相册",  
+            Toast.makeText(getApplicationContext(), "无法打开相册",  
                     Toast.LENGTH_LONG).show();  
         }  
     }  
@@ -514,7 +511,7 @@ public class quickPost extends Activity implements OnClickListener {
 			Random random = new Random();
 			int s = random.nextInt(99999)%(90000) + 10000;
 			if (username == "") {
-				Toast.makeText(this, "请先设置帐号信息", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), "请先设置帐号信息", Toast.LENGTH_LONG).show();
 				finish();
 			}
 			String urlString = "http://bbs.nju.edu.cn/vd" + String.valueOf(s) + "/bbslogin?type=2&id=" + username + "&pw=" + pwd;
@@ -628,9 +625,9 @@ public class quickPost extends Activity implements OnClickListener {
 					if (!picURL.equals("")) {
 			        	String oldString = ((EditText)findViewById(R.id.quick_content)).getText().toString();
 			            ((EditText)findViewById(R.id.quick_content)).setText(oldString + picURL);
-			            Toast.makeText(quickPost.this, "图片上传成功！", Toast.LENGTH_SHORT);
+			            Toast.makeText(getApplicationContext(), "图片上传成功！", Toast.LENGTH_SHORT);
 					} else {
-						Toast.makeText(quickPost.this, "图片上传失败！", Toast.LENGTH_SHORT);
+						Toast.makeText(getApplicationContext(), "图片上传失败！", Toast.LENGTH_SHORT);
 					}
 					break;
 				default:
@@ -713,7 +710,7 @@ public class quickPost extends Activity implements OnClickListener {
 					handler.sendMessage(msg);
 				} catch (ConnectTimeoutException e) {
 					// TODO: handle exception
-					Toast.makeText(quickPost.this, "网络似乎有些问题，如果要上传刚才的图片，请到媒体库中选中", Toast.LENGTH_LONG);
+					Toast.makeText(getApplicationContext(), "网络似乎有些问题，如果要上传刚才的图片，请到媒体库中选中", Toast.LENGTH_LONG);
 					picURL = "";
 					handler.sendMessage(msg);
 				} catch (IOException e) {
@@ -799,7 +796,7 @@ public class quickPost extends Activity implements OnClickListener {
 					handler.sendMessage(msg);
 				} catch (ConnectTimeoutException e) {
 					// TODO: handle exception
-					Toast.makeText(quickPost.this, "网络似乎有些问题，如果要上传刚才的图片，请到媒体库中选中", Toast.LENGTH_LONG);
+					Toast.makeText(getApplicationContext(), "网络似乎有些问题，如果要上传刚才的图片，请到媒体库中选中", Toast.LENGTH_LONG);
 					picURL = "";
 					handler.sendMessage(msg);
 				} catch (IOException e) {
@@ -859,7 +856,7 @@ public class quickPost extends Activity implements OnClickListener {
 			trycount --;
 		}
 		if (!success) {
-			Toast.makeText(this, "你的网络似乎有点问题...", Toast.LENGTH_SHORT);
+			Toast.makeText(getApplicationContext(), "你的网络似乎有点问题...", Toast.LENGTH_SHORT);
 			return false;
 		} else {
 			return true;

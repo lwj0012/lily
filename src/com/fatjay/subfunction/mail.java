@@ -103,7 +103,7 @@ public class mail extends Activity implements OnClickListener {
 			String username = mUserinfo.getUsername();
 			String pwd = mUserinfo.getPwd();
 			if (username == "") {
-				Toast.makeText(this, "请先设置帐号信息", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), "请先设置帐号信息", Toast.LENGTH_LONG).show();
 				finish();
 			}
 			String urlString = "http://bbs.nju.edu.cn/vd" + String.valueOf(s) + "/bbslogin?type=2&id=" + username + "&pw=" + pwd;

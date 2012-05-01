@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -17,6 +18,7 @@ import org.jsoup.select.Elements;
 import com.fatjay.R;
 import com.fatjay.main.userinfo;
 
+import android.R.anim;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -28,8 +30,15 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.Html;
 import android.text.method.SingleLineTransformationMethod;
+import android.util.Log;
+import android.view.Display;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
+import android.view.animation.ScaleAnimation;
+import android.view.animation.TranslateAnimation;
+import android.view.animation.Animation.AnimationListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.BaseAdapter;
@@ -38,7 +47,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.AbsListView.OnScrollListener;
+import android.widget.RelativeLayout.LayoutParams;
 
 public class threadList extends ListActivity implements ListView.OnScrollListener {
 	Map<Integer, String> dataMap = new HashMap<Integer, String>();
@@ -53,6 +62,14 @@ public class threadList extends ListActivity implements ListView.OnScrollListene
 	boolean more = false;
 	userinfo mUserinfo;
 	
+	private Button buttonNew, buttonDelete, buttonPhoto, buttonRefresh, buttonFavor, buttonMode;
+	private Animation animationTranslate, animationRotate, animationScale;
+	private static int width, height;
+	private LayoutParams params = new LayoutParams(0, 0);
+	private TextView loadmoreTextView;
+	private LinearLayout loading;
+	private static Boolean isClick = false;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -65,6 +82,8 @@ public class threadList extends ListActivity implements ListView.OnScrollListene
 		mContext = getApplicationContext();
 		Bundle mBundle = mIntent.getExtras();
 		url = mBundle.getString("url");
+		initialButton();
+		waitDialog = ProgressDialog.show(this, "", "正在加载...", true, true);
 		getlist(url);
 		boardname = url.split("=")[1];
 		
@@ -73,111 +92,41 @@ public class threadList extends ListActivity implements ListView.OnScrollListene
 		mTextView.setTextSize(20);
 		mTextView.setTransformationMethod(SingleLineTransformationMethod.getInstance());
 		mTextView.setFocusable(true);
-		Button refresh = (Button)findViewById(R.id.threadlist_refresh);
-		refresh.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				//waitDialog = ProgressDialog.show(threadList.this, "Loading...", "正在刷新...", true);
-				((listAdapter)mAdapter).list.clear();
-				dataMap.clear();
-				((listAdapter)mAdapter).notifyDataSetChanged();
-				getlist(orignial);
-				((listAdapter)mAdapter).notifyDataSetChanged();
-			}
-		});
-		final Button favoButton = (Button)findViewById(R.id.threadlist_favor);
-		favoButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				SharedPreferences favor = mContext.getSharedPreferences("favor", MODE_PRIVATE);
-				SharedPreferences.Editor mEditor = favor.edit();
-				if (isFavor) {
-					String favorBoard = favor.getString("favor", null);
-					if (favorBoard.indexOf(boardname)!=-1) {
-						if (favorBoard.indexOf("#" + boardname)!=-1) {
-							String[] temp = favorBoard.split("#"+boardname);
-							if (temp.length==2) {
-								favorBoard = temp[0].concat(temp[1]);
-							} else {
-								favorBoard = temp[0];
-							}
-						} else if (favorBoard.indexOf(boardname + "#")!=-1) {
-							String[] temp = favorBoard.split(boardname+"#");
-							if (temp.length==2) {
-								favorBoard = temp[0].concat(temp[1]);
-							} else {
-								favorBoard = temp[0];
-							}
-						}
-					}
-					mEditor.putString("favor", favorBoard);
-					mEditor.commit();
-					isFavor = false;
-					favoButton.setBackgroundResource(R.drawable.collect_cancel);
-				} else {
-					String favorBoard = favor.getString("favor", null);
-					mEditor.putString("favor", boardname + "#" + favorBoard);
-					mEditor.commit();
-					isFavor = true;
-					favoButton.setBackgroundResource(R.drawable.collect_cancel_press);
-				}
-			}
-		});
-		Button newThread = (Button)findViewById(R.id.threadlist_add);
-		newThread.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				Intent mIntent = new Intent(threadList.this, newThread.class);
-				Bundle mBundle = new Bundle();
-				mBundle.putString("action", "new");
-				mBundle.putString("title", "");
-				mBundle.putString("url", url);
-				mIntent.putExtras(mBundle);
-				threadList.this.startActivity(mIntent);
-			}
-		});
-		
+		buttonFavor = (Button)findViewById(R.id.list_favor);
 		if (favorlist.indexOf(boardname)!=-1) {
 			isFavor = true;
-			favoButton.setBackgroundResource(R.drawable.collect_cancel_press);
+			buttonFavor.setBackgroundResource(R.drawable.ic_button_favorite_add);
 		} else {
 			isFavor = false;
-			favoButton.setBackgroundResource(R.drawable.collect_cancel);
+			buttonFavor.setBackgroundResource(R.drawable.ic_button_favorite_delete);
 		}
 
+		final LinearLayout moreLayout = (LinearLayout) LinearLayout.inflate(this, R.layout.list_foot, null); 
+        loadmoreTextView = (TextView)moreLayout.findViewById(R.id.list_loadmore);
+        //loadmoreTextView.setText("加载下一页");
+        loading = (LinearLayout) moreLayout.findViewById(R.id.list_loading);
+        
+        //LinearLayout loadingLayout = new LinearLayout(this);  
+        loadmoreTextView.setOnClickListener(new OnClickListener() {  
+  
+            @Override  
+            public void onClick(View v) {
+            	loadmoreTextView.setVisibility(View.GONE);
+            	loading.setVisibility(View.VISIBLE);
+            	getlist(next);
+            }  
+        });  
+
+		getListView().addFooterView(moreLayout);
 		setListAdapter(mAdapter);
 		getListView().setOnScrollListener(this);
 	}
 
 
 	public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-		// TODO Auto-generated method stub
-		/*
-		int lastItem = firstVisibleItem + visibleItemCount;
-		if (((listAdapter)mAdapter).list.size()!=0) {
-			if (lastItem == mAdapter.getCount() && onlyone) {
-				onlyone = false;
-				getlist(next);
-			} else {
-				onlyone = true;
-			}
-		}
-		*/
 	}
 
 	public void onScrollStateChanged(AbsListView view,int scrollState){
-		switch (scrollState){
-		  // 当不滚动时
-			case OnScrollListener.SCROLL_STATE_IDLE:
-				// 判断滚动到底部
-				if (view.getLastVisiblePosition() >= (((listAdapter)mAdapter).list.size()-2)) {
-					getlist(next);
-				}
-				break;
-		}
 	}
 	
 	@Override
@@ -206,6 +155,8 @@ public class threadList extends ListActivity implements ListView.OnScrollListene
 					//((contentAdapter)mAdapter).notifyDataSetChanged();
 					waitDialog.cancel();
 					((listAdapter)mAdapter).notifyDataSetChanged();
+					loadmoreTextView.setVisibility(View.VISIBLE);
+	            	loading.setVisibility(View.GONE);
 					break;
 				default:
 					super.handleMessage(msg);
@@ -216,7 +167,6 @@ public class threadList extends ListActivity implements ListView.OnScrollListene
 	private ExecutorService executorService = Executors.newFixedThreadPool(5);
 	
 	private void getlist(final String url) {
-		waitDialog = ProgressDialog.show(this, "", "正在加载...", true, true);
 		executorService.submit(new Runnable() {
 			public void run() {
 	    		Message msg = new Message();
@@ -278,6 +228,296 @@ public class threadList extends ListActivity implements ListView.OnScrollListene
 				
 		});
 	}
+	
+private void initialButton() 
+	{
+		// TODO Auto-generated method stub
+		Display display = getWindowManager().getDefaultDisplay(); 
+		height = display.getHeight();  
+		width = display.getWidth();
+		Log.v("width  & height is:", String.valueOf(width) + ", " + String.valueOf(height));
+		
+		android.widget.RelativeLayout.LayoutParams params = new android.widget.RelativeLayout.LayoutParams(0, 0);
+		params.height = 50;
+		params.width = 50;
+		params.setMargins(10, height - 98, 0, 0);
+		
+		buttonMode = (Button) findViewById(R.id.list_mode);
+		buttonMode.setLayoutParams(params);
+		
+		buttonFavor = (Button) findViewById(R.id.list_favor);
+		buttonFavor.setLayoutParams(params);
+		
+		buttonRefresh = (Button) findViewById(R.id.list_refresh);
+		buttonRefresh.setLayoutParams(params);
+		
+		buttonPhoto = (Button) findViewById(R.id.list_camera);
+		buttonPhoto.setLayoutParams(params);
+
+		buttonNew = (Button) findViewById(R.id.list_thought);
+		buttonNew.setLayoutParams(params);
+		
+		buttonDelete = (Button) findViewById(R.id.list_function);		
+		buttonDelete.setLayoutParams(params);
+		
+		buttonDelete.setOnClickListener(new OnClickListener() 
+		{
+			@Override
+			public void onClick(View v) 
+			{
+				// TODO Auto-generated method stub					
+				if(isClick == false)
+				{
+					isClick = true;
+					buttonDelete.startAnimation(animRotate(-45.0f, 0.5f, 0.5f));					
+					buttonNew.startAnimation(animTranslate(0.0f, -180.0f, 10, height - 240, buttonNew, 80));
+					buttonPhoto.startAnimation(animTranslate(30.0f, -150.0f, 60, height - 230, buttonPhoto, 100));
+					buttonRefresh.startAnimation(animTranslate(70.0f, -120.0f, 110, height - 210, buttonRefresh, 120));
+					buttonFavor.startAnimation(animTranslate(80.0f, -110.0f, 150, height - 180, buttonFavor, 140));
+					buttonMode.startAnimation(animTranslate(90.0f, -60.0f, 170, height - 140, buttonMode, 160));
+				}
+				else
+				{
+					isClick = false;
+					buttonDelete.startAnimation(animRotate(90.0f, 0.5f, 0.5f));
+					buttonNew.startAnimation(animTranslate(0.0f, 140.0f, 10, height - 98, buttonNew, 180));
+					buttonPhoto.startAnimation(animTranslate(-60.0f, 120.0f, 10, height - 98, buttonPhoto, 160));
+					buttonRefresh.startAnimation(animTranslate(-115.0f, 105.0f, 10, height - 98, buttonRefresh, 140));
+					buttonFavor.startAnimation(animTranslate(-150.0f, 70.0f, 10, height - 98, buttonFavor, 120));
+					buttonMode.startAnimation(animTranslate(-170.0f, 0.0f, 10, height - 98, buttonMode, 80));
+				}
+			}
+		});
+		buttonNew.setOnClickListener(new OnClickListener() 
+		{
+			@Override
+			public void onClick(View v) 
+			{
+				buttonNew.startAnimation(setAnimScale(2.5f, 2.5f));
+				buttonPhoto.startAnimation(setAnimScale(0.0f, 0.0f));	
+				buttonRefresh.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonFavor.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonMode.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonDelete.startAnimation(setAnimScale(0.0f, 0.0f));
+				Intent mIntent = new Intent(threadList.this, newThread.class);
+				Bundle mBundle = new Bundle();
+				mBundle.putString("action", "new");
+				mBundle.putString("title", "");
+				mBundle.putString("url", url);
+				mIntent.putExtras(mBundle);
+				if (isClick == true) {
+					isClick = false;
+					buttonDelete.startAnimation(animRotate(90.0f, 0.5f, 0.45f));
+					buttonNew.startAnimation(animTranslate(0.0f, 140.0f, 10, height - 98, buttonNew, 180));
+					buttonPhoto.startAnimation(animTranslate(-60.0f, 120.0f, 10, height - 98, buttonPhoto, 160));
+					buttonRefresh.startAnimation(animTranslate(-115.0f, 105.0f, 10, height - 98, buttonRefresh, 140));
+					buttonFavor.startAnimation(animTranslate(-150.0f, 70.0f, 10, height - 98, buttonFavor, 120));
+					buttonMode.startAnimation(animTranslate(-170.0f, 0.0f, 10, height - 98, buttonMode, 80));
+				}
+				threadList.this.startActivity(mIntent);
+			}
+		});
+		buttonPhoto.setOnClickListener(new OnClickListener() 
+		{
+			@Override
+			public void onClick(View v) 
+			{			
+				buttonPhoto.startAnimation(setAnimScale(2.5f, 2.5f));	
+				buttonNew.startAnimation(setAnimScale(0.0f, 0.0f));	
+				buttonRefresh.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonFavor.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonMode.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonDelete.startAnimation(setAnimScale(0.0f, 0.0f));
+				Intent mIntent = new Intent(threadList.this, newThread.class);
+				Bundle mBundle = new Bundle();
+				mBundle.putString("action", "new");
+				mBundle.putString("title", "");
+				mBundle.putString("url", url);
+				mIntent.putExtras(mBundle);
+				if (isClick == true) {
+					isClick = false;
+					buttonDelete.startAnimation(animRotate(90.0f, 0.5f, 0.45f));
+					buttonNew.startAnimation(animTranslate(0.0f, 140.0f, 10, height - 98, buttonNew, 180));
+					buttonPhoto.startAnimation(animTranslate(-60.0f, 120.0f, 10, height - 98, buttonPhoto, 160));
+					buttonRefresh.startAnimation(animTranslate(-115.0f, 105.0f, 10, height - 98, buttonRefresh, 140));
+					buttonFavor.startAnimation(animTranslate(-150.0f, 70.0f, 10, height - 98, buttonFavor, 120));
+					buttonMode.startAnimation(animTranslate(-170.0f, 0.0f, 10, height - 98, buttonMode, 80));
+				}
+				threadList.this.startActivity(mIntent);
+			}
+		});
+		buttonRefresh.setOnClickListener(new OnClickListener() 
+		{
+			@Override
+			public void onClick(View v) 
+			{
+				buttonRefresh.startAnimation(setAnimScale(2.5f, 2.5f));
+				buttonPhoto.startAnimation(setAnimScale(0.0f, 0.0f));	
+				buttonNew.startAnimation(setAnimScale(0.0f, 0.0f));	
+				buttonFavor.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonMode.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonDelete.startAnimation(setAnimScale(0.0f, 0.0f));
+				if (isClick == true) {
+					isClick = false;
+					buttonDelete.startAnimation(animRotate(90.0f, 0.5f, 0.45f));
+					buttonNew.startAnimation(animTranslate(0.0f, 140.0f, 10, height - 98, buttonNew, 180));
+					buttonPhoto.startAnimation(animTranslate(-60.0f, 120.0f, 10, height - 98, buttonPhoto, 160));
+					buttonRefresh.startAnimation(animTranslate(-115.0f, 105.0f, 10, height - 98, buttonRefresh, 140));
+					buttonFavor.startAnimation(animTranslate(-150.0f, 70.0f, 10, height - 98, buttonFavor, 120));
+					buttonMode.startAnimation(animTranslate(-170.0f, 0.0f, 10, height - 98, buttonMode, 80));
+				}
+				((listAdapter)mAdapter).list.clear();
+				dataMap.clear();
+				((listAdapter)mAdapter).notifyDataSetChanged();
+				getlist(orignial);
+				((listAdapter)mAdapter).notifyDataSetChanged();
+			}
+		});
+		buttonFavor.setOnClickListener(new OnClickListener() 
+		{
+			@Override
+			public void onClick(View v) 
+			{
+				buttonFavor.startAnimation(setAnimScale(2.5f, 2.5f));
+				buttonRefresh.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonPhoto.startAnimation(setAnimScale(0.0f, 0.0f));	
+				buttonNew.startAnimation(setAnimScale(0.0f, 0.0f));	
+				buttonMode.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonDelete.startAnimation(setAnimScale(0.0f, 0.0f));
+				
+				if (isClick == true) {
+					isClick = false;
+					buttonDelete.startAnimation(animRotate(90.0f, 0.5f, 0.45f));
+					buttonNew.startAnimation(animTranslate(0.0f, 140.0f, 10, height - 98, buttonNew, 180));
+					buttonPhoto.startAnimation(animTranslate(-60.0f, 120.0f, 10, height - 98, buttonPhoto, 160));
+					buttonRefresh.startAnimation(animTranslate(-115.0f, 105.0f, 10, height - 98, buttonRefresh, 140));
+					buttonFavor.startAnimation(animTranslate(-150.0f, 70.0f, 10, height - 98, buttonFavor, 120));
+					buttonMode.startAnimation(animTranslate(-170.0f, 0.0f, 10, height - 98, buttonMode, 80));
+				}
+				
+				SharedPreferences favor = mContext.getSharedPreferences("favor", MODE_PRIVATE);
+				SharedPreferences.Editor mEditor = favor.edit();
+				String favorBoard = favor.getString("favor", null);
+				if (isFavor) {
+					String[] tempStrings = favorBoard.split("#");
+					List<String> list = new LinkedList<String>();
+			        for(int i = 0; i < tempStrings.length; i++) {
+			            if(!list.contains(tempStrings[i]) && !tempStrings[i].equals(boardname)) {
+			                list.add(tempStrings[i]);
+			            }
+			        }
+			        favorBoard = "";
+			        for (int j = 0; j < list.size(); j++) {
+						favorBoard = favorBoard + "#" + list.get(j);
+					}
+			        favorBoard = favorBoard.substring(1);
+					mEditor.putString("favor", favorBoard);
+					mEditor.commit();
+					isFavor = false;
+					buttonFavor.setBackgroundResource(R.drawable.ic_button_favorite_delete);
+				} else {
+					mEditor.putString("favor", boardname + "#" + favorBoard);
+					mEditor.commit();
+					isFavor = true;
+					buttonFavor.setBackgroundResource(R.drawable.composer_favor_checked);
+				}
+			}
+		});
+		buttonMode.setOnClickListener(new OnClickListener() 
+		{
+			@Override
+			public void onClick(View v) 
+			{
+				buttonMode.startAnimation(setAnimScale(2.5f, 2.5f));
+				buttonRefresh.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonPhoto.startAnimation(setAnimScale(0.0f, 0.0f));	
+				buttonNew.startAnimation(setAnimScale(0.0f, 0.0f));	
+				buttonFavor.startAnimation(setAnimScale(0.0f, 0.0f));
+				buttonDelete.startAnimation(setAnimScale(0.0f, 0.0f));
+			}
+		});
+	}
+	
+	protected Animation setAnimScale(float toX, float toY) 
+	{
+		// TODO Auto-generated method stub
+		animationScale = new ScaleAnimation(1f, toX, 1f, toY, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.45f);
+		animationScale.setInterpolator(threadList.this, anim.accelerate_decelerate_interpolator);
+		animationScale.setDuration(500);
+		animationScale.setFillAfter(false);
+		return animationScale;
+	}
+	
+	protected Animation animRotate(float toDegrees, float pivotXValue, float pivotYValue) 
+	{
+		// TODO Auto-generated method stub
+		animationRotate = new RotateAnimation(0, toDegrees, Animation.RELATIVE_TO_SELF, pivotXValue, Animation.RELATIVE_TO_SELF, pivotYValue);
+		animationRotate.setAnimationListener(new AnimationListener() 
+		{
+			
+			@Override
+			public void onAnimationStart(Animation animation) 
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onAnimationRepeat(Animation animation) 
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onAnimationEnd(Animation animation) 
+			{
+				// TODO Auto-generated method stub
+				animationRotate.setFillAfter(true);
+			}
+		});
+		return animationRotate;
+	}
+	
+	protected Animation animTranslate(float toX, float toY, final int lastX, final int lastY,
+			final Button button, long durationMillis) 
+	{
+		// TODO Auto-generated method stub
+		animationTranslate = new TranslateAnimation(0, toX, 0, toY);				
+		animationTranslate.setAnimationListener(new AnimationListener()
+		{
+						
+			@Override
+			public void onAnimationStart(Animation animation)
+			{
+				// TODO Auto-generated method stub
+								
+			}
+						
+			@Override
+			public void onAnimationRepeat(Animation animation) 
+			{
+				// TODO Auto-generated method stub
+							
+			}
+						
+			@Override
+			public void onAnimationEnd(Animation animation)
+			{
+				// TODO Auto-generated method stub
+				params = new LayoutParams(0, 0);
+				params.height = 50;
+				params.width = 50;											
+				params.setMargins(lastX, lastY, 0, 0);
+				button.setLayoutParams(params);
+				button.clearAnimation();
+						
+			}
+		});																								
+		animationTranslate.setDuration(durationMillis);
+		return animationTranslate;
+	}
+	
 	
 	private class listAdapter extends BaseAdapter {
 		List<Integer> list = new ArrayList<Integer>();
@@ -350,6 +590,7 @@ public class threadList extends ListActivity implements ListView.OnScrollListene
 				this.setOrientation(VERTICAL);
 				LinearLayout toprow_layout = new LinearLayout(context);
 				toprow_layout.setOrientation(VERTICAL);
+				toprow_layout.setBackgroundResource(R.drawable.bg_list);
 				
 				LinearLayout first_row = new LinearLayout(context);
 				first_row.setOrientation(HORIZONTAL);

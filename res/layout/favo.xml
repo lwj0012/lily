@@ -1,40 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TabHost xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@android:id/tabhost"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
-
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:orientation="vertical" >
-
-        <HorizontalScrollView android:layout_height="wrap_content"
-                android:layout_width="fill_parent" android:scrollbars="none">
-        <RadioGroup
-            android:id="@+id/favor_rg"
-            android:layout_width="fill_parent"
-            android:layout_height="42dp"
-            android:background="#f00"
-            android:orientation="horizontal" >
-        </RadioGroup>
-        </HorizontalScrollView>
-        <TabWidget
-            android:id="@android:id/tabs"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:paddingLeft="1dip"
-            android:paddingRight="1dip"
-            android:paddingTop="4dip"
-            android:visibility="gone" />
-
-        <FrameLayout
-            android:id="@android:id/tabcontent"
-            android:layout_width="fill_parent"
-            android:layout_height="0dip"
-            android:layout_weight="1.11" />
-        
-
-    </LinearLayout>
-
-</TabHost>
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+    <TabHost
+	    android:id="@android:id/tabhost"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent" >
+	
+	    <LinearLayout
+	        android:layout_width="fill_parent"
+	        android:layout_height="fill_parent"
+	        android:orientation="vertical" >
+	
+	        <HorizontalScrollView android:layout_height="wrap_content"
+	                android:layout_width="fill_parent" android:scrollbars="none">
+	        <RadioGroup
+	            android:id="@+id/favor_rg"
+	            android:layout_width="wrap_content"
+	            android:layout_height="42dp"
+	            android:background="#f00"
+	            android:orientation="horizontal" >
+	        </RadioGroup>
+	        </HorizontalScrollView>
+	        <TabWidget
+	            android:id="@android:id/tabs"
+	            android:layout_width="fill_parent"
+	            android:layout_height="wrap_content"
+	            android:paddingLeft="1dip"
+	            android:paddingRight="1dip"
+	            android:paddingTop="4dip"
+	            android:visibility="gone" />
+	
+	        <FrameLayout
+	            android:id="@android:id/tabcontent"
+	            android:layout_width="fill_parent"
+	            android:layout_height="0dip"
+	            android:layout_weight="1.11" />
+	    </LinearLayout>
+	</TabHost>
+	<RelativeLayout 
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent" >
+		<Button 
+		    android:id="@+id/favor_mode"
+			android:layout_width="wrap_content" 
+			android:layout_height="wrap_content"
+			android:background="@drawable/composer_thought"
+			android:layout_marginBottom="10dip" 
+			android:layout_marginLeft="10dip"
+			android:layout_alignParentBottom="true" >
+		</Button>
+		<Button 
+		    android:id="@+id/favor_favor"
+			android:layout_width="wrap_content" 
+			android:layout_height="wrap_content"
+			android:background="@drawable/ic_button_favorite_delete"
+			android:layout_marginBottom="10dip" 
+			android:layout_marginLeft="10dip"
+			android:layout_alignParentBottom="true"
+			android:layout_above="@id/favor_mode" >
+		</Button>
+		<Button 
+		    android:id="@+id/favor_refresh"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:background="@drawable/ic_button_refresh1"
+			android:layout_marginBottom="10dip" 
+			android:layout_marginLeft="10dip"
+			android:layout_alignParentBottom="true" 
+			android:layout_above="@id/favor_favor" >
+		</Button>
+		<Button 
+		    android:id="@+id/favor_camera"
+			android:layout_width="wrap_content" 
+			android:layout_height="wrap_content"
+			android:background="@drawable/composer_camera"
+			android:layout_marginBottom="10dip" 
+			android:layout_marginLeft="10dip"
+			android:layout_alignParentBottom="true" 
+			android:layout_above="@id/favor_refresh">
+		</Button>
+		<Button 
+		    android:id="@+id/favor_new"
+			android:layout_width="wrap_content" 
+			android:layout_height="wrap_content"
+			android:background="@drawable/ic_button_add"
+			android:layout_marginBottom="10dip" 
+			android:layout_marginLeft="10dip"
+			android:layout_alignParentBottom="true" 
+			android:layout_above="@id/favor_camera">
+		</Button>
+		<Button 
+		    android:id="@+id/favor_function"
+			android:layout_width="wrap_content" 
+			android:layout_height="wrap_content"
+			android:background="@drawable/button_add"
+			android:layout_marginBottom="10dip" 
+			android:layout_marginLeft="10dip"
+			android:layout_alignParentBottom="true" 
+			android:layout_above="@id/favor_new">
+		</Button>
+	</RelativeLayout>
+</merge>

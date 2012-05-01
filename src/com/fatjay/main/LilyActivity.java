@@ -14,13 +14,17 @@ import com.fatjay.function.hotpot;
 import com.fatjay.function.options;
 import com.fatjay.function.top;
 
+import dalvik.system.VMRuntime;
+
 import android.app.TabActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.Display;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -33,18 +37,34 @@ public class LilyActivity extends TabActivity {
 	Context mContext;
 	RadioGroup rGroup;
 	userinfo mUserinfo;
+	ImageView spotlight;
+	int current_select = 0;
+	private int width;
 	public static LilyActivity instance;
 	Map<String, Object> data = new HashMap<String, Object>();
+	
+	private final static float TARGET_HEAP_UTILIZATION = 0.75f;
+	private final static int CWJ_HEAP_SIZE = 6* 1024* 1024;
+	
+	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        VMRuntime.getRuntime().setTargetHeapUtilization(TARGET_HEAP_UTILIZATION);
+        VMRuntime.getRuntime().setMinimumHeapSize(CWJ_HEAP_SIZE); 
+        
         setContentView(R.layout.main);
         mUserinfo = (userinfo) getApplication();
         mContext = this;
         getIdentify();
         mHost = getTabHost();
         instance = this;
+        Display display = getWindowManager().getDefaultDisplay(); 
+		display.getHeight();  
+		width = display.getWidth();
+        spotlight = (ImageView)findViewById(R.id.select_spot);
         
         SharedPreferences favor = mContext.getSharedPreferences("favor", 0);
         String favorBoard = favor.getString("favor", null);
@@ -91,25 +111,21 @@ public class LilyActivity extends TabActivity {
 	public void switchActivity(int idx) {
 		int n = mHost.getCurrentTab();
 		if (idx < n) {
-			Animation a = AnimationUtils.loadAnimation(this, R.anim.slide_left_out);
-			//a.setInterpolator(AnimationUtils.loadInterpolator(this, android.R.anim.overshoot_interpolator));
-			mHost.getCurrentView().startAnimation(a);
+			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_right_out));
 		} else if (idx > n) {
-			Animation b = AnimationUtils.loadAnimation(this, R.anim.slide_right_out);
-			//b.setInterpolator(AnimationUtils.loadInterpolator(this, android.R.anim.overshoot_interpolator));
-			mHost.getCurrentView().startAnimation(b);
+			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_left_out));
 		}
 		mHost.setCurrentTab(idx);
 		if (idx < n) {
-			Animation c = AnimationUtils.loadAnimation(this, R.anim.slide_left_in);
-			//c.setInterpolator(AnimationUtils.loadInterpolator(this, android.R.anim.overshoot_interpolator));
-			mHost.getCurrentView().startAnimation(c);
+			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_right_in));
 		} else if (idx > n) {
-			Animation d = AnimationUtils.loadAnimation(this, R.anim.slide_right_in);
-			//d.setInterpolator(AnimationUtils.loadInterpolator(this, android.R.anim.overshoot_interpolator));
-			mHost.getCurrentView().startAnimation(d);
+			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_left_in));
 		}
 		
+		Animation spotAnimation = new TranslateAnimation( (float)(n*width/5), (float)(idx*width/5), 0.0f, 0.0f);
+		spotAnimation.setFillAfter(true);
+		spotAnimation.setDuration(400);
+		spotlight.startAnimation(spotAnimation);
 		RadioButton rb = (RadioButton) rGroup.getChildAt(idx);
 		rb.setChecked(true);
 	}
@@ -122,7 +138,7 @@ public class LilyActivity extends TabActivity {
 	        String username = favor.getString("account", null);
 	        String password = favor.getString("password", null);
 			if (username==null ) {
-				Toast.makeText(this, "请先设置帐号信息", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), "请先设置帐号信息", Toast.LENGTH_LONG).show();
 				return false;
 			}
 			String urlString = "http://bbs.nju.edu.cn/vd" + String.valueOf(s) + "/bbslogin?type=2&id=" + username + "&pw=" + password;
@@ -143,7 +159,7 @@ public class LilyActivity extends TabActivity {
 				mUserinfo.setUsername(username);
 				mUserinfo.setPwd(password);
 				mUserinfo.setCode("vd" + String.valueOf(s));
-				Toast.makeText(this, "登录成功!", Toast.LENGTH_SHORT);
+				Toast.makeText(getApplicationContext(), "登录成功!", Toast.LENGTH_SHORT);
 				return true;
 			}
 		} catch (IOException e) {

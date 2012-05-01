@@ -12,9 +12,7 @@ import java.util.Map;
 import com.fatjay.R;
 import com.fatjay.main.LilyActivity;
 
-import android.app.AlertDialog;
 import android.app.ExpandableListActivity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;

@@ -7,33 +7,35 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical" >
-		<HorizontalScrollView android:layout_height="wrap_content"
-                android:layout_width="fill_parent" android:scrollbars="none">
+
 			<RadioGroup
 			    android:id="@+id/allboard_rg"
-			    android:layout_width="fill_parent"
-			    android:layout_height="48px"
+			    android:layout_width="wrap_content"
+			    android:layout_height="42dp"
 			    android:background="#f00"
 			    android:orientation="horizontal" >
 			    <RadioButton
 			        android:id="@+id/allboard_search"
 			        style="@+style/menu_item"
 			        android:checked="true"
-			        android:text="搜索板面" />
+			        android:layout_height="42dp"
+			        android:text="搜索\n板面" />
 			    <RadioButton
 			        android:id="@+id/allboard_mainpage"
 			        style="@+style/menu_item"
-			        android:text="首页板面" />
+			        android:layout_height="42dp"
+			        android:text="首页\n板面" />
 			    <RadioButton
 			        android:id="@+id/allboard_hotbrd"
 			        style="@+style/menu_item"
-			        android:text="热门版面" />
+			        android:layout_height="42dp"
+			        android:text="热门\n版面" />
 			    <RadioButton
 			        android:id="@+id/allboard_recbrd"
 			        style="@+style/menu_item"
-			        android:text="推荐板面" />
+			        android:layout_height="42dp"
+			        android:text="推荐\n板面" />
 			</RadioGroup>
-        </HorizontalScrollView>
         <TabWidget
             android:id="@android:id/tabs"
             android:layout_width="fill_parent"

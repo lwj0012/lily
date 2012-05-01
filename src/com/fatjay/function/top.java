@@ -12,13 +12,14 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import com.fatjay.R;
+import com.fatjay.effects.PullToRefreshListView;
+import com.fatjay.effects.PullToRefreshListView.OnRefreshListener;
 import com.fatjay.main.userinfo;
 import com.fatjay.subfunction.maillist;
 import com.fatjay.subfunction.searchDlg;
 import com.fatjay.subfunction.threadContent;
 import com.fatjay.subfunction.threadList;
 
-import android.R.color;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
@@ -35,11 +36,9 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -64,24 +63,16 @@ public class top extends ListActivity {
         waitDialog.setCancelable(false);
         waitDialog.show();
 		getTop();
-		Button refreshButton = (Button)findViewById(R.id.top10_refresh);
-		refreshButton.setOnClickListener(new OnClickListener() {
+		((PullToRefreshListView) getListView()).setOnRefreshListener(new OnRefreshListener() {
 			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				waitDialog = new ProgressDialog(top.this);
-		        waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-		        waitDialog.setMessage("正在加载中...");
-		        waitDialog.setIndeterminate(true);
-		        waitDialog.setCancelable(false);
-		        waitDialog.show();
+            public void onRefresh() {
+                // Do work to refresh the list here.
 				((TopAdapter)mAdapter).list.clear();
 				topList.clear();
-				((TopAdapter)mAdapter).notifyDataSetChanged();
 				getTop();
-				((TopAdapter)mAdapter).notifyDataSetChanged();
-			}
+            }
 		});
+		
 		setListAdapter(mAdapter);
 		getListView().setOnCreateContextMenuListener(this);
 		
@@ -92,7 +83,7 @@ public class top extends ListActivity {
 		// TODO Auto-generated method stub
 		super.onListItemClick(l, v, position, id);
 		System.out.println("clicked!");
-		String[] temp = topList.get( ((TopAdapter)mAdapter).list.get(position) ).split("#");
+		String[] temp = topList.get( ((TopAdapter)mAdapter).list.get(position-1) ).split("#");
 		String url = temp[1];
 		Intent startread = new Intent(top.this, threadContent.class);
 		Bundle mBundle = new Bundle();
@@ -142,16 +133,16 @@ public class top extends ListActivity {
 		// TODO Auto-generated method stub
 		int menuInfo = ((AdapterContextMenuInfo)item.getMenuInfo()).position;
 		switch (item.getItemId()) {
-		case 0:
-			String[] tempStrings = topList.get(((TopAdapter)mAdapter).list.get(menuInfo)).split("#");
-			Intent mIntent = new Intent(top.this, threadList.class);
-			Bundle mBundle = new Bundle();
-			mBundle.putString("url", "http://bbs.nju.edu.cn/bbstdoc?board=" + tempStrings[4]);
-			mIntent.putExtras(mBundle);
-			top.this.startActivity(mIntent);
-			break;
-		default:
-			break;
+			case 0:
+				String[] tempStrings = topList.get(((TopAdapter)mAdapter).list.get(menuInfo-1)).split("#");
+				Intent mIntent = new Intent(top.this, threadList.class);
+				Bundle mBundle = new Bundle();
+				mBundle.putString("url", "http://bbs.nju.edu.cn/bbstdoc?board=" + tempStrings[4]);
+				mIntent.putExtras(mBundle);
+				top.this.startActivity(mIntent);
+				break;
+			default:
+				break;
 		}
 		return true;
 	}
@@ -165,25 +156,25 @@ public class top extends ListActivity {
 		menu.add(0, 0, Menu.FIRST, "打开所在版面");
 	}
 
-	 @Override
-		public boolean onCreateOptionsMenu(Menu menu) {
-			// TODO Auto-generated method stub
-			menu.add(Menu.NONE, Menu.FIRST + 1, 5, "查看邮件").setIcon(android.R.drawable.ic_menu_search);
-	        return true;
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// TODO Auto-generated method stub
+		menu.add(Menu.NONE, Menu.FIRST + 1, 5, "查看邮件").setIcon(android.R.drawable.ic_menu_search);
+	    return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// TODO Auto-generated method stub
+		switch (item.getItemId()) {
+		case Menu.FIRST + 1:
+			Intent send = new Intent();
+			send.setClass(top.this, maillist.class);
+			top.this.startActivity(send);
+			break;
 		}
-
-		@Override
-		public boolean onOptionsItemSelected(MenuItem item) {
-			// TODO Auto-generated method stub
-			switch (item.getItemId()) {
-			case Menu.FIRST + 1:
-				Intent send = new Intent();
-				send.setClass(top.this, maillist.class);
-				top.this.startActivity(send);
-				break;
-			}
-			return true;
-		}
+		return true;
+	}
 
 	private Handler handler = new Handler() {
 
@@ -194,6 +185,7 @@ public class top extends ListActivity {
 				case 0://接到从线程内传来的图片bitmap和imageView.
 						//这里只是将bitmap传到imageView中就行了。只所以不在线程中做是考虑到线程的安全性。
 					mAdapter.notifyDataSetChanged();
+					((PullToRefreshListView) getListView()).onRefreshComplete();
 					waitDialog.cancel();
 					break;
 				default:
@@ -307,7 +299,7 @@ public class top extends ListActivity {
 				this.setOrientation(VERTICAL);
 				LinearLayout toprow_layout = new LinearLayout(context);
 				toprow_layout.setOrientation(VERTICAL);
-				toprow_layout.setBackgroundColor(color.darker_gray);
+				toprow_layout.setBackgroundResource(R.drawable.bg_words);
 				
 				titleTextView = new TextView(context);
 				titleTextView.setText(title);
@@ -320,7 +312,7 @@ public class top extends ListActivity {
 				RelativeLayout inforow_layout = new RelativeLayout(context);
 				authorTextView = new TextView(context);
 				authorTextView.setText("由 " + author + "发表在 ");
-				authorTextView.setTextColor(Color.rgb(135, 206, 235));
+				authorTextView.setTextColor(Color.rgb(65, 105, 225));
 				RelativeLayout.LayoutParams authorLayoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
 						RelativeLayout.LayoutParams.WRAP_CONTENT);
 				authorLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
@@ -329,7 +321,7 @@ public class top extends ListActivity {
 				
 				boardTextView = new TextView(context);
 				boardTextView.setText(mUserinfo.boardname.get(board));
-				boardTextView.setTextColor(Color.rgb(135, 206, 235));
+				boardTextView.setTextColor(Color.rgb(65, 105, 225));
 				RelativeLayout.LayoutParams boardLayoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
 						RelativeLayout.LayoutParams.WRAP_CONTENT);
 				boardLayoutParams.addRule(RelativeLayout.RIGHT_OF, 1);
@@ -361,7 +353,7 @@ public class top extends ListActivity {
 			
 			public void setBoard(String board) {
 				boardTextView.setText(mUserinfo.boardname.get(board));
-				boardTextView.setTextColor(Color.rgb(135, 206, 235));
+				boardTextView.setTextColor(Color.rgb(65, 105, 225));
 			}
 			
 			public void setReply(String reply) {
@@ -371,7 +363,7 @@ public class top extends ListActivity {
 			
 			public void setAuthor(String author) {
 				authorTextView.setText("由 " + author + "发表在 ");
-				authorTextView.setTextColor(Color.rgb(135, 206, 235));
+				authorTextView.setTextColor(Color.rgb(65, 105, 225));
 	        }
 			
 		}

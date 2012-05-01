@@ -3,19 +3,26 @@ package com.fatjay.subfunction;
 import java.util.ArrayList;
 
 import com.fatjay.R;
+import com.fatjay.function.favor;
 import com.fatjay.function.hotpot;
 import com.fatjay.main.LilyActivity;
 import com.fatjay.main.userinfo;
+import com.fatjay.subfunction.favorBoard.MyGestureDetector;
 
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.View.OnTouchListener;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -28,6 +35,14 @@ public class hotThread extends ListActivity {
 	hotpot mHotpot;
 	BaseAdapter mAdapter = new hotAdapter(this);
 	userinfo mUserinfo;
+	
+	int pageId;
+	private static final int SWIPE_MIN_DISTANCE = 120;
+    private static final int SWIPE_MAX_OFF_PATH = 250;
+	private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+	private GestureDetector gestureDetector;
+	View.OnTouchListener gestureListener;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -41,8 +56,25 @@ public class hotThread extends ListActivity {
 		} else {
 			((hotAdapter)mAdapter).changeData(mHotpot.data.get(Integer.valueOf(page)));
 		}
+		Bundle mBundle = getIntent().getExtras();
+		pageId = mBundle.getInt("id");
 		setListAdapter(mAdapter);
 		getListView().setOnCreateContextMenuListener(this);
+		
+		gestureDetector = new GestureDetector(new MyGestureDetector());
+		OnTouchListener gesture = new OnTouchListener() {
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				// TODO Auto-generated method stub
+				Log.d("guesture", "captured...");
+				if (gestureDetector.onTouchEvent(event)) {
+                    return true;
+                }
+				return false;
+			}
+		};
+		getListView().setOnTouchListener(gesture);
 	}
 	
 
@@ -114,6 +146,24 @@ public class hotThread extends ListActivity {
 	        }
 	    }
 
+	class MyGestureDetector extends SimpleOnGestureListener {
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            try {
+                if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
+                    return false;
+                // right to left swipe
+                if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                	hotpot.instance.switchActivity(pageId + 1);
+                }  else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                	hotpot.instance.switchActivity(pageId - 1);
+                }
+            } catch (Exception e) {
+                // nothing
+            }
+            return false;
+        }
+    }
 
 	private class hotAdapter extends BaseAdapter {
 		ArrayList<String> list = null;
@@ -188,6 +238,7 @@ public class hotThread extends ListActivity {
 				this.setOrientation(VERTICAL);
 				LinearLayout toprow_layout = new LinearLayout(context);
 				toprow_layout.setOrientation(VERTICAL);
+				toprow_layout.setBackgroundResource(R.drawable.dialog_full_holo_light);
 				
 				titleTextView = new TextView(context);
 				titleTextView.setText(title);

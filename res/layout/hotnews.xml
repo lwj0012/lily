@@ -21,83 +21,72 @@
 			        style="@style/menu_item"
 			    	android:layout_height="42dp"
 			        android:checked="true"
-			        android:gravity="center_horizontal"
-			        android:text="本站系统" />
+			        android:text="本站\n系统" />
 			    <RadioButton
 			        android:id="@+id/hotpot_rb02"
 			        android:layout_width="wrap_content"
 			        style="@style/menu_item"
 			    	android:layout_height="42dp"
-			    	android:gravity="center_horizontal"
-			        android:text="南京大学" />
+			        android:text="南京\n大学" />
 			    <RadioButton
 			        android:id="@+id/hotpot_rb03"
 			        android:layout_width="wrap_content"
 			        style="@style/menu_item"
 			    	android:layout_height="42dp"
-			    	android:gravity="center_horizontal"
-			        android:text="乡情校谊" />
+			        android:text="乡情\n校谊" />
 			    <RadioButton
 			        android:id="@+id/hotpot_rb04"
 			        style="@style/menu_item"
 			        android:layout_height="42dp"
-			        android:text="电脑技术" />
+			        android:text="电脑\n技术" />
 			    <RadioButton
 			        android:id="@+id/hotpot_rb05"
 			        android:layout_width="wrap_content"
 			        style="@style/menu_item"
 			    	android:layout_height="42dp"
-			    	android:gravity="center_horizontal"
-			        android:text="学术科学" />
+			        android:text="学术\n科学" />
 			    <RadioButton
 			        android:id="@+id/hotpot_rb06"
 			        android:layout_width="wrap_content"
 			        style="@style/menu_item"
 			    	android:layout_height="42dp"
-			    	android:gravity="center_horizontal"
-			        android:text="文化艺术" />
+			        android:text="文化\n艺术" />
 			    <RadioButton
 			        android:id="@+id/hotpot_rb07"
 			        android:layout_width="wrap_content"
 			        style="@style/menu_item"
 			    	android:layout_height="42dp"
-			    	android:gravity="center_horizontal"
-			        android:text="体育娱乐" />
+			        android:text="体育\n娱乐" />
 			    <RadioButton
 			        android:id="@+id/hotpot_rb08"
 			        android:layout_width="wrap_content"
 			        style="@style/menu_item"
 			    	android:layout_height="42dp"
-			    	android:gravity="center_horizontal"
-			        android:text="感性休闲" />
+			        android:text="感性\n休闲" />
 			    <RadioButton
 			        android:id="@+id/hotpot_rb09"
 			        android:layout_width="wrap_content"
 			        style="@style/menu_item"
 			    	android:layout_height="42dp"
-			    	android:gravity="center_horizontal"
-			        android:text="新闻信息" />
+			        android:text="新闻\n信息" />
 			    <RadioButton
 			        android:id="@+id/hotpot_rb10"
 			        android:layout_width="wrap_content"
 			        style="@style/menu_item"
 			    	android:layout_height="42dp"
-			    	android:gravity="center_horizontal"
-			        android:text="百合广角" />
+			        android:text="百合\n广角" />
 			    <RadioButton
 			        android:id="@+id/hotpot_rb11"
 			        android:layout_width="wrap_content"
 			        style="@style/menu_item"
 			    	android:layout_height="42dp"
-			    	android:gravity="center_horizontal"
-			        android:text="校务信箱" />
+			        android:text="校务\n信箱" />
 			    <RadioButton
 			        android:id="@+id/hotpot_rb12"
 			        android:layout_width="wrap_content"
 			        style="@style/menu_item"
 					android:layout_height="42dp"
-					android:gravity="center_horizontal"
-			        android:text="社团群体" />
+			        android:text="社团\n群体" />
 			</RadioGroup>
         </HorizontalScrollView>
         <TabWidget

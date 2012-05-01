@@ -122,7 +122,7 @@ public class options extends Activity implements OnItemSelectedListener {
 			String doc = Jsoup.connect(urlString).get().toString();
 			int t = doc.indexOf("setCookie");
 			if (t == -1) {
-				Toast.makeText(getApplicationContext(), "log in failed! try again!", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "账号验证失败，请核对账号", Toast.LENGTH_SHORT).show();
 				return false;
 			}
 			else {
@@ -269,7 +269,7 @@ public class options extends Activity implements OnItemSelectedListener {
 				if (sync_favor.equals("")) {
 					mEditor.putString("favor", "D_Computer#Joke#Pictures");
 					mEditor.commit();
-					Toast.makeText(options.this, "你还没有在百合上面预订任何版面，将默认为你添加三个版面", Toast.LENGTH_LONG);
+					Toast.makeText(getApplicationContext(), "你还没有在百合上面预订任何版面，将默认为你添加三个版面", Toast.LENGTH_LONG);
 				} else {
 					mEditor.putString("favor", sync_favor.substring(0, sync_favor.length()-1));
 					mEditor.commit();

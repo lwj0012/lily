@@ -1,8 +1,6 @@
 package com.fatjay.subfunction;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +17,8 @@ import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.util.EntityUtils;
 
 import com.fatjay.R;
+import com.fatjay.effects.PullToRefreshListView;
+import com.fatjay.effects.PullToRefreshListView.OnRefreshListener;
 import com.fatjay.main.LilyActivity;
 import com.fatjay.main.userinfo;
 
@@ -33,9 +33,7 @@ import android.os.Message;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -54,19 +52,30 @@ public class hotbrd extends ListActivity {
 		setContentView(R.layout.hotbrd);
 		mUserinfo = (userinfo) getApplication();
 		mAdapter = new hotAdapter(this);
-		Button refresh = (Button)findViewById(R.id.hotbrd_refresh);
-		refresh.setOnClickListener(new OnClickListener() {
+//		Button refresh = (Button)findViewById(R.id.hotbrd_refresh);
+//		refresh.setOnClickListener(new OnClickListener() {
+//			@Override
+//			public void onClick(View v) {
+//				// TODO Auto-generated method stub
+//				//waitDialog = ProgressDialog.show(threadList.this, "Loading...", "正在刷新...", true);
+//				((hotAdapter)mAdapter).list.clear();
+//				dataMap.clear();
+//				((hotAdapter)mAdapter).notifyDataSetChanged();
+//				getInfo();
+//			}
+//		});
+		waitDialog = ProgressDialog.show(getParent(), "", "正在加载...", true, true);
+		getInfo();
+		((PullToRefreshListView) getListView()).setOnRefreshListener(new OnRefreshListener() {
 			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				//waitDialog = ProgressDialog.show(threadList.this, "Loading...", "正在刷新...", true);
+            public void onRefresh() {
+                // Do work to refresh the list here.
 				((hotAdapter)mAdapter).list.clear();
 				dataMap.clear();
 				((hotAdapter)mAdapter).notifyDataSetChanged();
 				getInfo();
-			}
+            }
 		});
-		getInfo();
 		setListAdapter(mAdapter);
 	}
 	
@@ -103,6 +112,7 @@ public class hotbrd extends ListActivity {
 					//((contentAdapter)mAdapter).notifyDataSetChanged();
 					waitDialog.cancel();
 					((hotAdapter)mAdapter).notifyDataSetChanged();
+					((PullToRefreshListView) getListView()).onRefreshComplete();
 					break;
 				default:
 					super.handleMessage(msg);
@@ -113,7 +123,6 @@ public class hotbrd extends ListActivity {
 	private ExecutorService executorService = Executors.newFixedThreadPool(5);
 	
 	private void getInfo() {
-		waitDialog = ProgressDialog.show(getParent(), "", "正在加载...", true, true);
 		executorService.submit(new Runnable() {
 			public void run() {
 	    		Message msg = new Message();

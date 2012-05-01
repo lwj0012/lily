@@ -3,7 +3,6 @@ package com.fatjay.subfunction;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -11,8 +10,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -55,20 +52,24 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.text.Editable;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.Toast;
@@ -86,10 +87,13 @@ public class newThread extends Activity implements OnClickListener {
 	boolean quote = false;
 	private int compress_rate;
 	private ProgressDialog waitDialog;
+	private static final int IMAGE_WITH_DATA = 3025;
+	private static final int FINGERPAINT_WITH_DATA = 3024;
 	private static final int CAMERA_WITH_DATA = 3023;  
     private static final int PHOTO_PICKED_WITH_DATA = 3021;
     private static final File PHOTO_DIR = new File(Environment.getExternalStorageDirectory() + "/lily/original");
     private static final String TEMP_PHOTO_DIR = Environment.getExternalStorageDirectory() + "/lily/temp";
+    private String doodleString;
     
     private int timeoutConnection = 10000;  
     private int timeoutSocket = 10000;
@@ -99,6 +103,10 @@ public class newThread extends Activity implements OnClickListener {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND,
+				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 		setContentView(R.layout.newthread);
 		mUserinfo = (userinfo)getApplication(); 
 		Bundle mBundle = getIntent().getExtras();
@@ -109,6 +117,8 @@ public class newThread extends Activity implements OnClickListener {
 		SharedPreferences favor = this.getSharedPreferences("compress_rate", 0);
         String temp = favor.getString("rate", null);
         compress_rate = Integer.valueOf(temp);
+        
+        
 		
 		boardname = urlString.substring(urlString.indexOf("=")+1);
 		if (boardname.contains("&")) {
@@ -141,14 +151,17 @@ public class newThread extends Activity implements OnClickListener {
 		}
 		Button mButton1 = (Button)findViewById(R.id.new_send);
 		mButton1.setOnClickListener(this);
-		Button mButton2 = (Button)findViewById(R.id.new_cancel);
+		Button mButton2 = (Button)findViewById(R.id.new_paint);
 		mButton2.setOnClickListener(this);
 		Button photoButton = (Button)findViewById(R.id.new_photo);
 		photoButton.setOnClickListener(this);
+		Button imageButton = (Button)findViewById(R.id.new_image);
+		imageButton.setOnClickListener(this);
 	}
 
 	public void onClick(View arg0) {
-		Intent restartFavor = new Intent(); 
+		Intent restartFavor = new Intent();
+		Intent mIntent;
 		restartFavor.setClass(newThread.this, threadContent.class);
 		switch (arg0.getId()) {
 		case R.id.new_send:
@@ -157,12 +170,20 @@ public class newThread extends Activity implements OnClickListener {
 				this.finish();
 			}
 			break;
-		case R.id.new_cancel:
-			setResult(RESULT_CANCELED, restartFavor);
-			this.finish();
+		case R.id.new_paint:
+			mIntent = new Intent(newThread.this, FingerPaint.class);
+			Bundle mBundle = new Bundle();
+			doodleString = getFilename();
+			mBundle.putString("filename", doodleString);
+			mIntent.putExtras(mBundle);
+			startActivityForResult(mIntent, FINGERPAINT_WITH_DATA);
 			break;
 		case R.id.new_photo:
 			doPickPhotoAction();
+			break;
+		case R.id.new_image:
+			mIntent = new Intent(newThread.this, imageSelector.class);
+			startActivityForResult(mIntent, IMAGE_WITH_DATA);
 			break;
 		}
 	}
@@ -172,7 +193,7 @@ public class newThread extends Activity implements OnClickListener {
         super.onActivityResult(requestCode, resultCode, data);  
         Bitmap photoCaptured = null;
         switch (requestCode) {
-			case CAMERA_WITH_DATA: 
+			case CAMERA_WITH_DATA:
 	            if (resultCode != RESULT_OK)
 	            	return;
 	            if (photoUri == null) {
@@ -182,7 +203,7 @@ public class newThread extends Activity implements OnClickListener {
 					photoCaptured = decodeStream(photoUri);
 	                ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	
-	                is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
+	                is_compress = true;//((CheckBox)findViewById(R.id.new_compress)).isChecked();
 	                if (is_compress) {
 	                	photoCaptured.compress(Bitmap.CompressFormat.JPEG, compress_rate, baos);
 					} else {
@@ -190,30 +211,7 @@ public class newThread extends Activity implements OnClickListener {
 					}
 	                
 	                byte[] photoBytes = baos.toByteArray();
-	                Time t=new Time();
-	                t.setToNow();
-	                String year = String.valueOf(t.year);
-	                String month = String.valueOf(t.month+1);
-	                String day = String.valueOf(t.monthDay);
-	                String hour;
-	                if (t.hour<10) {
-	    				hour = "0" + String.valueOf(t.hour);
-	    			} else {
-	    				hour = String.valueOf(t.hour);
-	    			}
-	                String minute;
-	                if (t.minute<10) {
-	                	minute = "0" + String.valueOf(t.minute);
-	    			} else {
-	    				minute = String.valueOf(t.minute);
-	    			}
-	                String second;
-	                if (t.second<10) {
-	                	second = "0" + String.valueOf(t.second);
-	    			} else {
-	    				second = String.valueOf(t.second);
-	    			}
-	    			filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";
+	    			filenameString = getFilename();
 	                File dir = new File(TEMP_PHOTO_DIR);
 					if (!dir.exists()) {
 						dir.mkdirs();
@@ -255,7 +253,7 @@ public class newThread extends Activity implements OnClickListener {
 				try {
 					photoCaptured = decodeStream(picUri);
 	                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	                is_compress = ((CheckBox)findViewById(R.id.new_compress)).isChecked();
+	                is_compress = true;//((CheckBox)findViewById(R.id.new_compress)).isChecked();
 	                if (is_compress) {
 	                	photoCaptured.compress(Bitmap.CompressFormat.JPEG, compress_rate, baos);
 					} else {
@@ -263,30 +261,7 @@ public class newThread extends Activity implements OnClickListener {
 					}
 	                
 	                byte[] photoBytes = baos.toByteArray();
-	                Time t=new Time();
-	                t.setToNow();
-	                String year = String.valueOf(t.year);
-	                String month = String.valueOf(t.month+1);
-	                String day = String.valueOf(t.monthDay);
-	                String hour;
-	                if (t.hour<10) {
-	    				hour = "0" + String.valueOf(t.hour);
-	    			} else {
-	    				hour = String.valueOf(t.hour);
-	    			}
-	                String minute;
-	                if (t.minute<10) {
-	                	minute = "0" + String.valueOf(t.minute);
-	    			} else {
-	    				minute = String.valueOf(t.minute);
-	    			}
-	                String second;
-	                if (t.second<10) {
-	                	second = "0" + String.valueOf(t.second);
-	    			} else {
-	    				second = String.valueOf(t.second);
-	    			}
-	    			filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";                
+	    			filenameString = getFilename();               
 	                File dir = new File(TEMP_PHOTO_DIR);
 					if (!dir.exists()) {
 						dir.mkdirs();
@@ -317,7 +292,35 @@ public class newThread extends Activity implements OnClickListener {
 		        waitDialog.show();
 	            uploadFile2Svr();
 	        	break;
-			default:
+			case FINGERPAINT_WITH_DATA:
+				if (resultCode != RESULT_OK)
+	            	return;
+				File doodleFile = new File(TEMP_PHOTO_DIR, doodleString);
+				photoPath = doodleFile.getAbsolutePath();
+				filenameString = doodleString;
+	            waitDialog = new ProgressDialog(newThread.this);
+		        waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+		        waitDialog.setMessage("请稍候...");
+		        waitDialog.setTitle("正在上传照片");
+		        waitDialog.setIndeterminate(true);
+		        waitDialog.setCancelable(false);
+		        waitDialog.show();
+	            uploadFile2Svr();
+	            break;
+			case IMAGE_WITH_DATA:
+				if (resultCode != RESULT_OK)
+	            	return;
+				String imageString = "";
+				imageString = data.getCharSequenceExtra("biaoqing").toString();
+				EditText contentEditText = ((EditText)findViewById(R.id.new_content));
+				Editable edit = contentEditText.getEditableText();
+				int index = contentEditText.getSelectionStart();
+				if (index < 0 || index >= edit.length() ){
+					edit.append(imageString);
+				}else {
+					edit.insert(index,imageString);//光标所在位置插入文字
+				}
+				//contentEditText.setText(tempString);
 				break;
 		}
     }
@@ -372,13 +375,13 @@ public class newThread extends Activity implements OnClickListener {
                     public void onClick(DialogInterface dialog, int which) {  
                         dialog.dismiss();  
                         switch (which) {  
-                        case 0:{  
+                        case 0:{
                             String status=Environment.getExternalStorageState();  
                             if(status.equals(Environment.MEDIA_MOUNTED)){//判断是否有SD卡  
                             	doTakePhoto();// 用户点击了从照相机获取  
                             }  
-                            else{  
-                                Toast.makeText(newThread.this, "没有SD卡", Toast.LENGTH_LONG);
+                            else{
+                                Toast.makeText(getApplicationContext(), "没有SD卡", Toast.LENGTH_LONG);
                             }  
                             break;  
                               
@@ -403,38 +406,42 @@ public class newThread extends Activity implements OnClickListener {
         try {  
             // Launch camera to take photo for selected contact  
             PHOTO_DIR.mkdirs();// 创建照片的存储目录  
-            Time t = new Time();
-            t.setToNow();
-            String year = String.valueOf(t.year);
-            String month = String.valueOf(t.month+1);
-            String day = String.valueOf(t.monthDay);
-            String hour;
-            if (t.hour<10) {
-				hour = "0" + String.valueOf(t.hour);
-			} else {
-				hour = String.valueOf(t.hour);
-			}
-            String minute;
-            if (t.minute<10) {
-            	minute = "0" + String.valueOf(t.minute);
-			} else {
-				minute = String.valueOf(t.minute);
-			}
-            String second;
-            if (t.second<10) {
-            	second = "0" + String.valueOf(t.second);
-			} else {
-				second = String.valueOf(t.second);
-			}
-			String filenameString = "lily_" + year + month + day + hour + minute + second + ".jpeg";
+			String filenameString = getFilename();
 			File outFile = new File(PHOTO_DIR, filenameString);
             final Intent intent = getTakePickIntent(outFile);  
             startActivityForResult(intent, CAMERA_WITH_DATA);  
         } catch (ActivityNotFoundException e) {  
-            Toast.makeText(this, "无法创建图片",  
+            Toast.makeText(getApplicationContext(), "无法创建图片",  
                     Toast.LENGTH_LONG).show();  
         }  
-    }  
+    }
+	
+	public String getFilename() {
+		Time t = new Time();
+        t.setToNow();
+        String year = String.valueOf(t.year);
+        String month = String.valueOf(t.month+1);
+        String day = String.valueOf(t.monthDay);
+        String hour;
+        if (t.hour<10) {
+			hour = "0" + String.valueOf(t.hour);
+		} else {
+			hour = String.valueOf(t.hour);
+		}
+        String minute;
+        if (t.minute<10) {
+        	minute = "0" + String.valueOf(t.minute);
+		} else {
+			minute = String.valueOf(t.minute);
+		}
+        String second;
+        if (t.second<10) {
+        	second = "0" + String.valueOf(t.second);
+		} else {
+			second = String.valueOf(t.second);
+		}
+        return "lily_" + year + month + day + hour + minute + second + ".jpeg";
+	}
       
     public static Intent getTakePickIntent(File f) {  
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE, null);  
@@ -449,7 +456,7 @@ public class newThread extends Activity implements OnClickListener {
             final Intent intent = getPhotoPickIntent();  
             startActivityForResult(intent, PHOTO_PICKED_WITH_DATA);  
         } catch (ActivityNotFoundException e) {  
-            Toast.makeText(this, "无法打开相册",  
+            Toast.makeText(getApplicationContext(), "无法打开相册",  
                     Toast.LENGTH_LONG).show();  
         }  
     }  
@@ -461,38 +468,7 @@ public class newThread extends Activity implements OnClickListener {
         intent.putExtra("return-data", true);  
         return intent;  
     } 
-	
-    /*
-	protected void doCropPhoto(Uri file) {  
-        try {  
-            // 启动gallery去剪辑这个照片  
-            final Intent intent = getCropImageIntent(file);  
-            startActivityForResult(intent, PHOTO_PICKED_WITH_DATA);  
-        } catch (Exception e) {  
-            Toast.makeText(this, "无法打开相册",  
-                    Toast.LENGTH_LONG).show();  
-        }  
-    }
-    */
 
-    /**  
-    * Constructs an intent for image cropping. 调用图片剪辑程序  
-    */  
-    /*
-    public static Intent getCropImageIntent(Uri photoUri) {  
-        Intent intent = new Intent("com.android.camera.action.CROP");  
-        intent.setDataAndType(photoUri, "image/*");  
-        intent.putExtra("crop", "true");  
-        intent.putExtra("aspectX", 1);  
-        intent.putExtra("aspectY", 1);  
-        intent.putExtra("outputX", 80);  
-        intent.putExtra("outputY", 80);  
-        intent.putExtra("return-data", true);  
-        return intent;  
-    }
-    */
-    
-	
 	private boolean getIdentify() {
 		try {
 			Random random = new Random();
@@ -500,7 +476,7 @@ public class newThread extends Activity implements OnClickListener {
 			String username = mUserinfo.getUsername();
 			String pwd = mUserinfo.getPwd();
 			if (username == "") {
-				Toast.makeText(this, "请先设置帐号信息", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), "请先设置帐号信息", Toast.LENGTH_LONG).show();
 				finish();
 			}
 			String urlString = "http://bbs.nju.edu.cn/vd" + String.valueOf(s) + "/bbslogin?type=2&id=" + username + "&pw=" + pwd;
@@ -566,7 +542,7 @@ public class newThread extends Activity implements OnClickListener {
 	            while ((inputLine = reader1.readLine()) != null) {  
 	                sb.append(inputLine).append("\n");
 	                if (inputLine.contains("错误")) {
-						Toast.makeText(newThread.this, inputLine, Toast.LENGTH_SHORT).show();
+						Toast.makeText(getApplicationContext(), inputLine, Toast.LENGTH_SHORT).show();
 						newThread.this.finish();
 						return true;
 					}
@@ -596,6 +572,49 @@ public class newThread extends Activity implements OnClickListener {
 		String code = mUserinfo.getCode();
 		String cookie = mUserinfo.getCookies();
 		String contentString = ((EditText)findViewById(R.id.new_content)).getText().toString();
+		String[] lines = contentString.split("\n");
+		String content = "";
+		float[] widths;
+		String tempString;
+		Paint mPaint;
+		mPaint = new Paint();
+        mPaint.setAntiAlias(true);
+        mPaint.setStrokeWidth(5);
+        mPaint.setStrokeCap(Paint.Cap.ROUND);
+        mPaint.setTextSize(2);
+        mPaint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.ITALIC));
+        
+        float width = 0.0f;
+        for (int i = 0; i < lines.length; i++) {
+        	if (lines[i].length() < 38) {
+				content = content + "\n" + lines[i];
+			} else {
+				tempString = lines[i];
+				int length = lines[i].length();
+				int start = 0;
+				int end = 1;
+				while (end<length) {
+					widths = new float[tempString.substring(start, end).length()];
+			        mPaint.getTextWidths(tempString.substring(start, end), 0, tempString.substring(start, end).length(), widths);
+			        for (int k = 0; k < widths.length; k++) {
+						width += widths[k];
+					}
+			        if (width < 78) {
+			        	width = 0.0f;
+                    	end ++;
+					} else {
+						width = 0.0f;
+						content = content + "\n" + tempString.substring(start, end);
+						start = end;
+						end = end + 1;
+					}
+				}
+				content = content + "\n" + tempString.substring(start);
+			}
+		}
+		for (int i = 0; i < lines.length; i++) {
+			
+		}
 		String title = ((EditText)findViewById(R.id.new_title)).getText().toString();
 		String newurlString;
 		if (quote) {
@@ -610,7 +629,7 @@ public class newThread extends Activity implements OnClickListener {
 		    postData.add(new BasicNameValuePair("reid", reidString));
 		    postData.add(new BasicNameValuePair("signature", "1"));
 		    postData.add(new BasicNameValuePair("autocr", "on"));
-		    postData.add(new BasicNameValuePair("text", contentString));
+		    postData.add(new BasicNameValuePair("text", content));
 		    httpRequest.addHeader("Cookie", cookie);
 		    httpRequest.setEntity(new UrlEncodedFormEntity(postData, "GB2312"));
 		    HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
@@ -643,7 +662,7 @@ public class newThread extends Activity implements OnClickListener {
 			trycount --;
 		}
 		if (!success) {
-			Toast.makeText(this, "你的网络似乎有点问题...", Toast.LENGTH_SHORT);
+			Toast.makeText(getApplicationContext(), "你的网络似乎有点问题...", Toast.LENGTH_SHORT);
 			return false;
 		} else {
 			return true;
@@ -660,9 +679,9 @@ public class newThread extends Activity implements OnClickListener {
 					if (!picURL.equals("")) {
 			        	String oldString = ((EditText)findViewById(R.id.new_content)).getText().toString();
 			            ((EditText)findViewById(R.id.new_content)).setText(oldString + picURL);
-			            Toast.makeText(newThread.this, "图片上传成功！", Toast.LENGTH_SHORT);
+			            Toast.makeText(getApplicationContext(), "图片上传成功！", Toast.LENGTH_SHORT);
 					} else {
-						Toast.makeText(newThread.this, "图片上传失败！", Toast.LENGTH_SHORT);
+						Toast.makeText(getApplicationContext(), "图片上传失败！", Toast.LENGTH_SHORT);
 					}
 					break;
 				default:
@@ -687,8 +706,6 @@ public class newThread extends Activity implements OnClickListener {
 			    HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
 		        client = new DefaultHttpClient(httpParameters);
 				client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
-				
-			    
 				String url = "http://bbs.nju.edu.cn/" + mUserinfo.getCode() + "/bbsdoupload";
 				
 				HttpPost imgPost = new HttpPost(url);
@@ -748,7 +765,7 @@ public class newThread extends Activity implements OnClickListener {
 					e.printStackTrace();
 					handler.sendMessage(msg);
 				} catch (ConnectTimeoutException e) {
-					Toast.makeText(newThread.this, "网络似乎有些问题，如果要上传刚才的图片，请到媒体库选中", Toast.LENGTH_LONG);
+					Toast.makeText(getApplicationContext(), "网络似乎有些问题，如果要上传刚才的图片，请到媒体库选中", Toast.LENGTH_LONG);
 					picURL = "";
 					handler.sendMessage(msg);
 				} catch (IOException e) {

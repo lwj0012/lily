@@ -10,7 +10,7 @@
         android:text="@string/jump_confirm" />
     <AutoCompleteTextView
         android:id="@+id/search_dlg_edit"
-        android:layout_width="match_parent"
+        android:layout_width="fill_parent"
         android:layout_height="45dp"
         android:layout_alignParentRight="true"
         android:layout_toRightOf="@+id/search_dlg_go" >

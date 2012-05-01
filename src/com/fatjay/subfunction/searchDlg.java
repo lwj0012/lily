@@ -51,6 +51,7 @@ public class searchDlg extends Activity implements OnClickListener {
 				mBundle.putString("url", "http://bbs.nju.edu.cn/bbstdoc?board=" + boardname);
 				mIntent.putExtras(mBundle);
 				searchDlg.this.startActivity(mIntent);
+				finish();
 			} else {
 				String englishName = "";
 				Set<String> kset = mUserinfo.boardname.keySet();
@@ -66,8 +67,8 @@ public class searchDlg extends Activity implements OnClickListener {
 				finish();
 			}
 		} else {
-			Toast.makeText(searchDlg.this, "版面名称不存在", Toast.LENGTH_LONG);
-			((AutoCompleteTextView) findViewById(R.id.search_edit)).setText("");
+			Toast.makeText(getApplicationContext(), "版面名称不存在", Toast.LENGTH_LONG);
+			((AutoCompleteTextView) findViewById(R.id.search_dlg_edit)).setText("");
 		}
 		
 	}

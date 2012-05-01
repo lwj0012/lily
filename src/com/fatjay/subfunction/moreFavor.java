@@ -78,7 +78,7 @@ public class moreFavor extends ListActivity {
 					Bundle bundle=it.getExtras();
 					bundle.putString("favor",preference);
 					moreFavor.this.setResult(RESULT_CANCELED, it);
-					Toast.makeText(moreFavor.this, "save configration failed...", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "保存收藏失败！", Toast.LENGTH_SHORT).show();
 					Intent restartFavor = new Intent(); 
 					restartFavor.setClass(moreFavor.this, favor.class);
 					moreFavor.this.startActivity(restartFavor);
@@ -137,11 +137,11 @@ public class moreFavor extends ListActivity {
 			switch (msg.what) {
 				case 0:
 					waitDialog.cancel();
-					Toast.makeText(moreFavor.this, "同步收藏成功！", Toast.LENGTH_LONG);
+					Toast.makeText(getApplicationContext(), "同步收藏成功！", Toast.LENGTH_LONG);
 					break;
 				case 1:
 					waitDialog.cancel();
-					Toast.makeText(moreFavor.this, "同步收藏不成功，请检查网络~", Toast.LENGTH_LONG);
+					Toast.makeText(getApplicationContext(), "同步收藏不成功，请检查网络~", Toast.LENGTH_LONG);
 				default:
 					super.handleMessage(msg);
 			}

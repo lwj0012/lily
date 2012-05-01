@@ -1,102 +1,74 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    >
-    <RelativeLayout 
-    	android:layout_width="fill_parent"
-    	android:layout_height="fill_parent" >
-		<TextView
-		    android:id="@+id/new_text2"
-		    android:layout_width="fill_parent" 
-		    android:layout_height="wrap_content" 
-		    android:layout_marginLeft="20dip"
-		    android:layout_marginRight="20dip"
-		    android:layout_alignParentTop="true"
-		    android:text="标题:"
-		    android:gravity="left"
-		    android:textAppearance="?android:attr/textAppearanceMedium">
-		</TextView>
-		<EditText
-		    android:id="@+id/new_title"
-		    android:layout_width="fill_parent"
-		    android:layout_height="wrap_content"
-		    android:layout_below="@+id/new_text2"
-		    android:layout_marginLeft="20dip"
-		    android:layout_marginRight="20dip"
-		    android:autoText="false"
-		    android:capitalize="none"
-		    android:gravity="fill_horizontal"
-		    android:textAppearance="?android:attr/textAppearanceMedium" >
-		</EditText>
-	
-		<TextView
-		    android:id="@+id/new_text3"
-		    android:layout_width="fill_parent" 
-		    android:layout_height="wrap_content"
-		    android:layout_below="@+id/new_title"
-		    android:layout_marginLeft="20dip"
-		    android:layout_marginRight="20dip"
-		    android:text="内容:"
-		    android:gravity="left"
-		    android:textAppearance="?android:attr/textAppearanceMedium">
-	    </TextView>
-	    <EditText
-	        android:id="@+id/new_content"
-	        android:layout_width="fill_parent"
-	        android:layout_height="250dp"
-	        android:layout_marginLeft="20dip"
-	        android:layout_marginRight="20dip"
-	        android:autoText="false"
-	        android:layout_below="@+id/new_text3"
-	        android:layout_above="@+id/new_l1"
-	        android:capitalize="none"
-	        android:gravity="fill_horizontal"
-	        android:singleLine="false"
-	        android:textAppearance="?android:attr/textAppearanceMedium" >
-		</EditText>
-		<LinearLayout 
-		    android:id="@+id/new_l1"
-		    android:orientation="horizontal"
-		    android:layout_width="fill_parent"
-		    android:layout_height="wrap_content"
-		    android:layout_above="@+id/new_l2" >
-			<Button
-			    android:id="@+id/new_photo"
-			    android:layout_width="wrap_content"
-			    android:layout_height="wrap_content"
-			    android:layout_gravity="center"
-			    android:gravity="center"
-			    android:layout_weight="2"
-			    android:text="上传图片" />
-			<CheckBox 
-			    android:id="@+id/new_compress"
-			    android:layout_width="wrap_content"
-			    android:layout_height="wrap_content"
-			    android:text="压缩图片？"
-			    android:checked="true"
-			    android:layout_weight="1" />
-		</LinearLayout>
-		<LinearLayout 
-		    android:id="@+id/new_l2"
-		    android:orientation="horizontal"
-		    android:layout_width="fill_parent"
-		    android:layout_height="wrap_content"
-		    android:layout_alignParentBottom="true" >
-		    <Button
-		        android:id="@+id/new_send"
-		        android:layout_width="match_parent"
-		        android:layout_height="wrap_content"
-		        android:layout_gravity="bottom"
-		        android:layout_weight="1"
-		        android:text="提交" />
-		    <Button 
-			    android:id="@+id/new_cancel"
-			    android:layout_width="fill_parent"
-			    android:layout_height="wrap_content"
-			    android:text="取消"
-			    android:layout_weight="1"/>
-		</LinearLayout>
-	</RelativeLayout>
-</LinearLayout>
+<?xml version="1.0" encoding="UTF-8"?>
+<RelativeLayout 
+	android:background="@drawable/bg_dialog" 
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout 
+    	android:orientation="vertical" 
+    	android:layout_width="fill_parent" 
+    	android:layout_height="wrap_content" >
+        <TextView 
+        	android:layout_width="wrap_content" 
+        	android:layout_height="wrap_content" 
+        	android:text="文章标题" />
+        <LinearLayout 
+        	android:gravity="center_vertical" 
+        	android:layout_gravity="center_vertical" 
+        	android:layout_width="fill_parent" 
+        	android:layout_height="wrap_content">
+            <EditText 
+            	android:textSize="16.0sp" 
+            	android:id="@+id/new_title" 
+            	android:layout_width="fill_parent" 
+            	android:layout_height="wrap_content" 
+            	android:layout_weight="1.0" 
+            	android:imeOptions="actionNext" />
+            <Button 
+            	android:id="@+id/new_send" 
+            	android:layout_width="fill_parent" 
+            	android:layout_height="wrap_content" 
+            	android:text="发表" 
+            	android:layout_weight="2.0" />
+        </LinearLayout>
+        <TextView 
+        	android:layout_width="wrap_content" 
+        	android:layout_height="wrap_content" 
+        	android:layout_marginTop="5.0dip" 
+        	android:text="文章内容" />
+        <EditText 
+        	android:textSize="16.0sp" 
+        	android:gravity="top" 
+        	android:id="@+id/new_content" 
+        	android:layout_width="fill_parent" 
+        	android:layout_height="150.0dip" 
+        	android:minHeight="150.0dip" 
+        	android:scrollbars="vertical"
+        	android:imeOptions="actionDone">
+            <requestFocus />
+        </EditText>
+        <LinearLayout 
+        	android:layout_width="fill_parent" 
+        	android:layout_height="wrap_content" 
+        	android:layout_weight="2.0">
+            <Button 
+            	android:id="@+id/new_photo" 
+            	android:layout_width="fill_parent" 
+            	android:layout_height="wrap_content" 
+            	android:text="上传图片" 
+            	android:layout_weight="1.0" />
+            <Button 
+            	android:id="@+id/new_paint" 
+            	android:layout_width="fill_parent" 
+            	android:layout_height="wrap_content" 
+            	android:text="涂鸦" 
+            	android:layout_weight="1.0" />
+            <Button 
+            	android:id="@+id/new_image" 
+            	android:layout_width="fill_parent" 
+            	android:layout_height="wrap_content" 
+            	android:text="表情" 
+            	android:layout_weight="1.0" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

@@ -17,6 +17,8 @@ import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.util.EntityUtils;
 
 import com.fatjay.R;
+import com.fatjay.effects.PullToRefreshListView;
+import com.fatjay.effects.PullToRefreshListView.OnRefreshListener;
 import com.fatjay.main.LilyActivity;
 import com.fatjay.main.userinfo;
 
@@ -31,9 +33,7 @@ import android.os.Message;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -51,22 +51,18 @@ public class recbrd extends ListActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.recbrd);
 		mUserinfo = (userinfo) getApplication();
-		Button refresh = (Button)findViewById(R.id.recbrd_refresh);
-		refresh.setOnClickListener(new OnClickListener() {
+		mAdapter = new recAdapter(this);
+		waitDialog = ProgressDialog.show(getParent(), "", "正在加载...", true, true);
+		getInfo();
+		((PullToRefreshListView) getListView()).setOnRefreshListener(new OnRefreshListener() {
 			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				//waitDialog = ProgressDialog.show(threadList.this, "Loading...", "正在刷新...", true);
+            public void onRefresh() {
 				((recAdapter)mAdapter).list.clear();
 				dataMap.clear();
 				((recAdapter)mAdapter).notifyDataSetChanged();
 				getInfo();
-			}
+            }
 		});
-		mAdapter = new recAdapter(this);
-		
-		getInfo();
-		
 		setListAdapter(mAdapter);
 	}
 	
@@ -103,6 +99,7 @@ public class recbrd extends ListActivity {
 					//((contentAdapter)mAdapter).notifyDataSetChanged();
 					waitDialog.cancel();
 					((recAdapter)mAdapter).notifyDataSetChanged();
+					((PullToRefreshListView) getListView()).onRefreshComplete();
 					break;
 				default:
 					super.handleMessage(msg);
@@ -113,7 +110,6 @@ public class recbrd extends ListActivity {
 	private ExecutorService executorService = Executors.newFixedThreadPool(5);
 	
 	private void getInfo() {
-		waitDialog = ProgressDialog.show(getParent(), "", "正在加载...", true, true);
 		executorService.submit(new Runnable() {
 			public void run() {
 	    		Message msg = new Message();

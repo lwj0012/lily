@@ -39,7 +39,7 @@ public class allboard extends TabActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.allboard);
-        parsePage();
+        //parsePage();														//ÐÔÄÜÆ¿¾±
         mHost = getTabHost();
         mContext = this;
         Intent searchBoard = new Intent(mContext, searchBoard.class);
@@ -97,15 +97,15 @@ public class allboard extends TabActivity {
 		int n = mHost.getCurrentTab();
 	
 		if (idx < n) {
-			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_left_out));
-		} else if (idx > n) {
 			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_right_out));
+		} else if (idx > n) {
+			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_left_out));
 		}
 		mHost.setCurrentTab(idx);
 		if (idx < n) {
-			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_left_in));
-		} else if (idx > n) {
 			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_right_in));
+		} else if (idx > n) {
+			mHost.getCurrentView().startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_left_in));
 		}
 		
 		RadioButton rb = (RadioButton) rGroup.getChildAt(idx);

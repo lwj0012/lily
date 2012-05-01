@@ -29,17 +29,18 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.Html;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.GestureDetector.SimpleOnGestureListener;
-import android.view.View.OnClickListener;
 import android.widget.AbsListView;
-import android.widget.AbsListView.OnScrollListener;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -58,13 +59,14 @@ public class favorBoard extends ListActivity implements ListView.OnScrollListene
 	String boardname;
 	userinfo mUserinfo = (userinfo) getApplication();
 	int pageId;
+	private TextView loadmoreTextView;
+	private LinearLayout loading;
 	
 	private static final int SWIPE_MIN_DISTANCE = 120;
     private static final int SWIPE_MAX_OFF_PATH = 250;
 	private static final int SWIPE_THRESHOLD_VELOCITY = 200;
 	private GestureDetector gestureDetector;
 	View.OnTouchListener gestureListener;
-	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -79,47 +81,50 @@ public class favorBoard extends ListActivity implements ListView.OnScrollListene
 		Bundle mBundle = mIntent.getExtras();
 		url = mBundle.getString("url");
 		pageId = mBundle.getInt("id");
-		//waitDialog = ProgressDialog.show(getParent(), "Loading...", "please wait...", true, true);
+
+		waitDialog = ProgressDialog.show(getParent(), "", "正在加载...", true, true);
 		getlist(url);
 		boardname = url.split("=")[1];
 		
 		if (favorlist.indexOf(boardname)!=-1) {
 			isFavor = true;
 		}
-		TextView mTextView = (TextView)findViewById(R.id.favorboard_title);
-		mTextView.setText(mUserinfo.boardname.get(boardname));
-		mTextView.setTextSize(20);
-		Button refresh = (Button)findViewById(R.id.favorboard_refresh);
-		refresh.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				//waitDialog = ProgressDialog.show(getParent(), "Loading...", "please wait...", true);
-				((listAdapter)mAdapter).list.clear();
-				dataMap.clear();
-				((listAdapter)mAdapter).notifyDataSetChanged();
-				getlist(orignial);
-				((listAdapter)mAdapter).notifyDataSetChanged();
-			}
-		});
-		Button add = (Button)findViewById(R.id.favorboard_add);
-		add.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				Intent mIntent = new Intent(favorBoard.this, newThread.class);
-				Bundle mBundle = new Bundle();
-				mBundle.putString("action", "new");
-				mBundle.putString("title", "");
-				mBundle.putString("url", url);
-				mBundle.putString("board", boardname);
-				mIntent.putExtras(mBundle);
-				favorBoard.this.startActivity(mIntent);
-			}
-		});
+		
+		final LinearLayout moreLayout = (LinearLayout) LinearLayout.inflate(this, R.layout.list_foot, null); 
+        loadmoreTextView = (TextView)moreLayout.findViewById(R.id.list_loadmore);
+        //loadmoreTextView.setText("加载下一页");
+        loading = (LinearLayout) moreLayout.findViewById(R.id.list_loading);
+        
+        //LinearLayout loadingLayout = new LinearLayout(this);  
+        loadmoreTextView.setOnClickListener(new OnClickListener() {  
+  
+            @Override  
+            public void onClick(View v) {
+            	loadmoreTextView.setVisibility(View.GONE);
+            	loading.setVisibility(View.VISIBLE);
+            	getlist(next);
+            }
+        });  
+
+		getListView().addFooterView(moreLayout);
+		
 		setListAdapter(mAdapter);
 		getListView().setOnScrollListener(this);
 		
 		gestureDetector = new GestureDetector(new MyGestureDetector());
+		OnTouchListener gesture = new OnTouchListener() {
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				// TODO Auto-generated method stub
+				Log.d("guesture", "captured...");
+				if (gestureDetector.onTouchEvent(event)) {
+                    return true;
+                }
+				return false;
+			}
+		};
+		getListView().setOnTouchListener(gesture);
         gestureListener = new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
                 if (gestureDetector.onTouchEvent(event)) {
@@ -146,15 +151,15 @@ public class favorBoard extends ListActivity implements ListView.OnScrollListene
 	}
 
 	public void onScrollStateChanged(AbsListView view,int scrollState){
-		switch (scrollState){
-		  // 当不滚动时
-			case OnScrollListener.SCROLL_STATE_IDLE:
-				// 判断滚动到底部
-				if (view.getLastVisiblePosition() >= (((listAdapter)mAdapter).list.size()-2)) {
-					getlist(next);
-				}
-				break;
-		}
+//		switch (scrollState){
+//		  // 当不滚动时
+//			case OnScrollListener.SCROLL_STATE_IDLE:
+//				// 判断滚动到底部
+//				if (view.getLastVisiblePosition() >= (((listAdapter)mAdapter).list.size()-2)) {
+//					getlist(next);
+//				}
+//				break;
+//		}
 	}
 	
 	@Override
@@ -193,17 +198,26 @@ public class favorBoard extends ListActivity implements ListView.OnScrollListene
 					//((contentAdapter)mAdapter).notifyDataSetChanged();
 					((listAdapter)mAdapter).notifyDataSetChanged();
 					waitDialog.cancel();
+					loadmoreTextView.setVisibility(View.VISIBLE);
+	            	loading.setVisibility(View.GONE);
 					break;
 				default:
 					super.handleMessage(msg);
 			}
 		}
 	};
+	
+	public void refresh() {
+		((listAdapter)mAdapter).list.clear();
+		dataMap.clear();
+		((listAdapter)mAdapter).notifyDataSetChanged();
+		getlist(orignial);
+		((listAdapter)mAdapter).notifyDataSetChanged();
+	}
 
 	private ExecutorService executorService = Executors.newFixedThreadPool(5);
 	
 	private void getlist(final String url) {
-		waitDialog = ProgressDialog.show(getParent(), "", "正在加载...", true, true);
 		executorService.submit(new Runnable() {
 			public void run() {
 	    		Message msg = new Message();
@@ -362,15 +376,12 @@ public class favorBoard extends ListActivity implements ListView.OnScrollListene
 			threadView(Context context, String id, String title, String time, String author, String info) {
 				super(context);
 				this.setOrientation(VERTICAL);
-				LinearLayout toprow_layout = new LinearLayout(context);
-				toprow_layout.setOrientation(VERTICAL);
 				
-				LinearLayout first_row = new LinearLayout(context);
-				first_row.setOrientation(HORIZONTAL);
-				noTextView = new TextView(context);
-				
+				LayoutInflater mInflater = getLayoutInflater();
+				RelativeLayout item = new RelativeLayout(context);
+				item = (RelativeLayout) mInflater.inflate(R.layout.favorboard_list_item, null);
+				noTextView = (TextView)(item.findViewById(R.id.favorboard_item_id));
 				noTextView.setTextSize(15);
-				
 				if (Integer.valueOf(id)>199980) {
 					noTextView.setTextColor(Color.RED);
 					noTextView.setText("Top");
@@ -378,50 +389,24 @@ public class favorBoard extends ListActivity implements ListView.OnScrollListene
 					noTextView.setTextColor(Color.BLUE);
 					noTextView.setText(id);
 				}
-				titleTextView = new TextView(context);
+				titleTextView = (TextView)(item.findViewById(R.id.favorboard_item_title));
 				titleTextView.setText(title);
 				titleTextView.setTextColor(Color.rgb(41, 36, 33));
 				titleTextView.setTextSize(20);
 				titleTextView.setPadding(4, 0, 0, 0);
-				first_row.addView(noTextView);
-				first_row.addView(titleTextView);
-				
-				RelativeLayout second_row = new RelativeLayout(context);
-				authorTextView = new TextView(context);
+				authorTextView = (TextView)(item.findViewById(R.id.favorboard_item_author));
 				authorTextView.setText("由 " + author + "发表于 ");
 				authorTextView.setTextColor(Color.BLUE);
 				authorTextView.setTextSize(16);
-				RelativeLayout.LayoutParams authorLayoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-						RelativeLayout.LayoutParams.WRAP_CONTENT);
-				authorLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
-				authorTextView.setLayoutParams(authorLayoutParams);
-				authorTextView.setId(1);
-				
-				timeTextView = new TextView(context);
+				infoTextView = (TextView)(item.findViewById(R.id.favorboard_item_info));
+				infoTextView.setText(Html.fromHtml(info));
+				infoTextView.setTextSize(16);
+				timeTextView = (TextView)(item.findViewById(R.id.favorboard_item_time));
 				timeTextView.setText(time);
 				timeTextView.setTextColor(Color.BLUE);
 				timeTextView.setTextSize(16);
-				RelativeLayout.LayoutParams timeLayoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-						RelativeLayout.LayoutParams.WRAP_CONTENT);
-				timeLayoutParams.addRule(RelativeLayout.RIGHT_OF, 1);
-				timeTextView.setPadding(5, 0, 20, 0);
-				timeTextView.setLayoutParams(timeLayoutParams);
 				
-				infoTextView = new TextView(context);
-				infoTextView.setText(Html.fromHtml(info));
-				infoTextView.setTextSize(16);
-				RelativeLayout.LayoutParams infoLayoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-						RelativeLayout.LayoutParams.WRAP_CONTENT);
-				infoLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
-				infoTextView.setLayoutParams(infoLayoutParams);
-				
-				second_row.addView(authorTextView, authorLayoutParams);
-				second_row.addView(timeTextView, timeLayoutParams);
-				second_row.addView(infoTextView, infoLayoutParams);
-				
-				toprow_layout.addView(first_row);
-				toprow_layout.addView(second_row);
-				addView(toprow_layout, new LinearLayout.LayoutParams(
+				addView(item, new LinearLayout.LayoutParams(
 	                    LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
 			}
 			
@@ -453,5 +438,4 @@ public class favorBoard extends ListActivity implements ListView.OnScrollListene
 	        }
 		}
 	}
-
 }

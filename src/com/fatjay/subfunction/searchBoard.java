@@ -68,7 +68,7 @@ public class searchBoard extends Activity implements OnClickListener {
 				searchBoard.this.startActivity(mIntent);
 			}
 		} else {
-			Toast.makeText(searchBoard.this, "版面名称不存在", Toast.LENGTH_LONG);
+			Toast.makeText(getApplicationContext(), "版面名称不存在", Toast.LENGTH_LONG);
 			((AutoCompleteTextView) findViewById(R.id.search_edit)).setText("");
 		}
 		
